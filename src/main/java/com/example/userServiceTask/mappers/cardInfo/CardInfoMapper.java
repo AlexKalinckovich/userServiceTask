@@ -6,6 +6,7 @@ import com.example.userServiceTask.dto.cardInfo.UpdateCardInfoDto;
 import com.example.userServiceTask.model.CardInfo;
 import com.example.userServiceTask.model.User;
 import org.mapstruct.*;
+import org.springframework.stereotype.Component;
 
 @Mapper(componentModel = "spring")
 public interface CardInfoMapper {

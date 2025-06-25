@@ -3,6 +3,7 @@ package com.example.userServiceTask.service;
 import com.example.userServiceTask.dto.user.CreateUserDto;
 import com.example.userServiceTask.dto.user.UserResponseDto;
 import com.example.userServiceTask.dto.user.UserUpdateDto;
+import com.example.userServiceTask.exception.user.EmailAlreadyExistsException;
 import com.example.userServiceTask.mappers.user.UserMapper;
 import com.example.userServiceTask.model.User;
 import com.example.userServiceTask.repositories.UserRepository;
@@ -27,6 +28,11 @@ public class UserService {
 
     @Transactional
     public UserResponseDto createUser(final CreateUserDto createUserDto) {
+
+        if(userRepository.findByEmail(createUserDto.getEmail()).isPresent()) {
+            throw new EmailAlreadyExistsException("User with email already exists");
+        }
+
         final User user = userMapper.createFromDto(createUserDto);
         return userMapper.toResponseDto(userRepository.save(user));
     }

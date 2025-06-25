@@ -32,6 +32,7 @@ public class CardInfo {
     private String number;
 
     @NotBlank
+    @Size(max = 100)
     @Column(nullable = false)
     private String holder;
 
