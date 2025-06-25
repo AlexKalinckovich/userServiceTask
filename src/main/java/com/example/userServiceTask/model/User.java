@@ -3,38 +3,40 @@ package com.example.userServiceTask.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Past;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@NoArgsConstructor
 @Table(name = "users")
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Data
 public class User {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false,name = "name")
+    @Column(nullable = false)
     private String name;
 
-    @Column(unique = true, nullable = false, name = "surname")
+    @Column(nullable = false)
     private String surname;
 
     @Past
-    @Column(unique = true, nullable = false ,name = "birth_date")
+    @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 
     @Email
-    @Column(unique = true, nullable = false, name = "email")
+    @Column(unique = true, nullable = false)
     private String email;
 
-
-    // IS IT GOOD? orphanRemoval = true. Strange thing
-    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CardInfo> cards;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CardInfo> cards = new ArrayList<>();
 }
