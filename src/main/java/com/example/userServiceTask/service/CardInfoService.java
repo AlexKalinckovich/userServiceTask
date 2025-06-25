@@ -5,6 +5,7 @@ import com.example.userServiceTask.dto.cardInfo.CreateCardInfoDto;
 import com.example.userServiceTask.dto.cardInfo.UpdateCardInfoDto;
 import com.example.userServiceTask.mappers.cardInfo.CardInfoMapper;
 import com.example.userServiceTask.model.CardInfo;
+import com.example.userServiceTask.model.User;
 import com.example.userServiceTask.repositories.CardInfoRepository;
 import com.example.userServiceTask.repositories.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -23,7 +24,9 @@ public class CardInfoService {
 
 
     @Autowired
-    public CardInfoService(CardInfoRepository cardInfoRepository, CardInfoMapper cardInfoMapper, UserRepository userRepository) {
+    public CardInfoService(final CardInfoRepository cardInfoRepository,
+                           final CardInfoMapper cardInfoMapper,
+                           final UserRepository userRepository) {
         this.cardInfoRepository = cardInfoRepository;
         this.cardInfoMapper = cardInfoMapper;
         this.userRepository = userRepository;
@@ -31,12 +34,15 @@ public class CardInfoService {
 
     @Transactional
     public CardInfoResponseDto createCardInfo(final CreateCardInfoDto createCardInfoDto) {
+        final Optional<User> user = userRepository.findById(createCardInfoDto.getUserId());
 
-        if(!userRepository.existsById(createCardInfoDto.getUserId())) {
+        if(user.isEmpty()) {
             throw new EntityNotFoundException("User with id " + createCardInfoDto.getUserId() + " does not exist");
         }
 
         final CardInfo cardInfo = cardInfoMapper.fromCreateDto(createCardInfoDto);
+        cardInfo.setUser(user.get());
+
         final CardInfo savedCardInfo = cardInfoRepository.save(cardInfo);
 
         return cardInfoMapper.toResponseDto(savedCardInfo);

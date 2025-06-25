@@ -1,10 +1,13 @@
 package com.example.userServiceTask.dto.cardInfo;
 
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.hibernate.validator.constraints.Range;
+
+import java.time.LocalDate;
 
 @Data
 public class UpdateCardInfoDto {
@@ -18,9 +21,7 @@ public class UpdateCardInfoDto {
     @Size(max = 100)
     private String holder;
 
-    @Pattern(
-            regexp = "(0[1-9]|1[0-2])/[0-9]{2}",
-            message = "Expiration date format must be MM/YY"
-    )
-    private String expirationDate;
+    @Future
+    @NotNull
+    private LocalDate expirationDate;
 }
