@@ -1,13 +1,14 @@
 package com.example.userServiceTask.service;
 
-import com.example.userServiceTask.dto.user.CreateUserDto;
-import com.example.userServiceTask.dto.user.UserResponseDto;
 import com.example.userServiceTask.dto.user.UserUpdateDto;
-import com.example.userServiceTask.mappers.user.UserMapper;
+import com.example.userServiceTask.exception.user.EmailAlreadyExistsException;
 import com.example.userServiceTask.model.User;
 import com.example.userServiceTask.repositories.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,22 +18,26 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final UserMapper userMapper;
 
     @Autowired
-    public UserService(UserRepository userRepository, UserMapper userMapper) {
+    public UserService(final UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.userMapper = userMapper;
     }
 
     @Transactional
-    public UserResponseDto createUser(final CreateUserDto createUserDto) {
-        final User user = userMapper.createFromDto(createUserDto);
-        return userMapper.toResponseDto(userRepository.save(user));
+    @CachePut(value = "USER_CACHE", key = "#result.id")
+    public User createUser(final User createUser) {
+
+        if(userRepository.findByEmail(createUser.getEmail()).isPresent()) {
+            throw new EmailAlreadyExistsException("User with email already exists");
+        }
+
+        return userRepository.save(createUser);
     }
 
     @Transactional
-    public UserResponseDto updateUser(final UserUpdateDto userUpdateDto) {
+    @CachePut(value = "USER_CACHE", key = "#result.id")
+    public User updateUser(final UserUpdateDto userUpdateDto) {
         final Long id = userUpdateDto.getId();
         final Optional<User> user = userRepository.findById(id);
 
@@ -40,31 +45,30 @@ public class UserService {
             throw new EntityNotFoundException("User with id " + id + " not found");
         }
 
-        final User updatedUser = user.get();
-        userMapper.updateFromDto(userUpdateDto, updatedUser);
-
-        return userMapper.toResponseDto(updatedUser);
+        return userRepository.updateUserById(id, user.get());
     }
 
     @Transactional(readOnly = true)
-    public UserResponseDto findUserById(final Long id) {
+    @Cacheable(value = "USER_CACHE", key = "#id")
+    public User findUserById(final Long id) {
         final Optional<User> user = userRepository.findById(id);
         if(user.isEmpty()){
             throw new EntityNotFoundException("User with id " + id + " not found");
         }
 
-        return userMapper.toResponseDto(user.get());
+        return user.get();
     }
 
 
     @Transactional
-    public UserResponseDto deleteUser(final Long id) {
+    @CacheEvict(value = "USER_CACHE", key = "#id")
+    public User deleteUser(final Long id) {
         final Optional<User> user = userRepository.findById(id);
         if(user.isEmpty()){
             throw new EntityNotFoundException("User with id " + id + " not found");
         }
 
-        return userMapper.toResponseDto(userRepository.deleteUserById(id));
+        return userRepository.deleteUserById(id);
     }
 
 

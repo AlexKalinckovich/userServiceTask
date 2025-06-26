@@ -2,13 +2,13 @@ package com.example.userServiceTask.model;
 
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
 
 
 @Entity
@@ -32,10 +32,11 @@ public class CardInfo {
     private String number;
 
     @NotBlank
+    @Size(max = 100)
     @Column(nullable = false)
     private String holder;
 
-    @Pattern(regexp = "(0[1-9]|1[0-2])/[0-9]{2}")
-    @Column(name = "expiration_date", nullable = false, length = 5)
-    private String expirationDate;
+    @Future(message = "Must be future date")
+    @NotNull
+    private LocalDate expirationDate;
 }

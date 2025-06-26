@@ -9,21 +9,20 @@ import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
 public interface CardInfoMapper {
+
     @Mappings({
             @Mapping(target = "id", ignore = true),
-            @Mapping(source = "userId", target = "user", qualifiedByName = "userIdToUser")
     })
     CardInfo fromCreateDto(CreateCardInfoDto createCardInfoDto);
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateFromDto(UpdateCardInfoDto updateCardInfoDto, @MappingTarget CardInfo cardInfo);
 
+    @Mappings({
+            @Mapping(target = "userId",source = "user", qualifiedByName = "userToUserId")
+    })
     CardInfoResponseDto toResponseDto(CardInfo cardInfo);
 
-    @Named("userIdToUser")
-    default User userIdToUser(Long userId) {
-        return userId == null ?
-                null : User.builder().id(userId).build();
+    @Named("userToUserId")
+    default Long userToUserId(final User user) {
+        return user == null ? null : user.getId();
     }
-
 }

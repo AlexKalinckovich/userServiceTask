@@ -1,14 +1,14 @@
 package com.example.userServiceTask.service;
 
-import com.example.userServiceTask.dto.cardInfo.CardInfoResponseDto;
-import com.example.userServiceTask.dto.cardInfo.CreateCardInfoDto;
 import com.example.userServiceTask.dto.cardInfo.UpdateCardInfoDto;
-import com.example.userServiceTask.mappers.cardInfo.CardInfoMapper;
 import com.example.userServiceTask.model.CardInfo;
+import com.example.userServiceTask.model.User;
 import com.example.userServiceTask.repositories.CardInfoRepository;
-import com.example.userServiceTask.repositories.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,57 +18,55 @@ import java.util.Optional;
 public class CardInfoService {
 
     private final CardInfoRepository cardInfoRepository;
-    private final UserRepository userRepository;
-    private final CardInfoMapper cardInfoMapper;
+    private final UserService userService;
 
 
     @Autowired
-    public CardInfoService(CardInfoRepository cardInfoRepository, CardInfoMapper cardInfoMapper, UserRepository userRepository) {
+    public CardInfoService(final CardInfoRepository cardInfoRepository,
+                           final UserService userService) {
         this.cardInfoRepository = cardInfoRepository;
-        this.cardInfoMapper = cardInfoMapper;
-        this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @Transactional
-    public CardInfoResponseDto createCardInfo(final CreateCardInfoDto createCardInfoDto) {
+    @CachePut(value = "CARD_INFO_CACHE", key = "#result.id")
+    public CardInfo createCardInfo(final CardInfo cardInfo) {
+        final Optional<User> cardUser = Optional.ofNullable(cardInfo.getUser());
+        final Long userId = cardUser.map(User::getId).orElse(null);
 
-        if(!userRepository.existsById(createCardInfoDto.getUserId())) {
-            throw new EntityNotFoundException("User with id " + createCardInfoDto.getUserId() + " does not exist");
-        }
+        final User user = userService.findUserById(userId);
+        cardInfo.setUser(user);
 
-        final CardInfo cardInfo = cardInfoMapper.fromCreateDto(createCardInfoDto);
-        final CardInfo savedCardInfo = cardInfoRepository.save(cardInfo);
-
-        return cardInfoMapper.toResponseDto(savedCardInfo);
+        return cardInfoRepository.save(cardInfo);
     }
 
     @Transactional
-    public CardInfoResponseDto updateCardInfo(final UpdateCardInfoDto updateCardInfoDto) {
+    @CachePut(value = "CARD_INFO_CACHE", key = "#result.id")
+    public CardInfo updateCardInfo(final UpdateCardInfoDto updateCardInfoDto) {
         final Long id = updateCardInfoDto.getId();
         final Optional<CardInfo> cardInfoOptional = cardInfoRepository.findById(id);
         if(cardInfoOptional.isEmpty()) {
             throw new EntityNotFoundException("CardInfo with id " + updateCardInfoDto.getId() + " does not exist");
         }
-        final CardInfo cardInfo = cardInfoOptional.get();
 
-        cardInfoMapper.updateFromDto(updateCardInfoDto, cardInfo);
-
-        return cardInfoMapper.toResponseDto(cardInfo);
+        return cardInfoRepository.updateCardInfoById(id, cardInfoOptional.get());
     }
 
     @Transactional(readOnly = true)
-    public CardInfoResponseDto getCardInfoById(final Long id) {
+    @Cacheable(value = "CARD_INFO_CACHE", key = "#id")
+    public CardInfo getCardInfoById(final Long id) {
         final Optional<CardInfo> cardInfoOptional = cardInfoRepository.findById(id);
         if(cardInfoOptional.isEmpty()) {
             throw new EntityNotFoundException("CardInfo with id " + id + " does not exist");
         }
 
-        return cardInfoMapper.toResponseDto(cardInfoOptional.get());
+        return cardInfoOptional.get();
     }
 
 
     @Transactional
-    public CardInfoResponseDto deleteCardInfoById(final Long id) {
-        return cardInfoMapper.toResponseDto(cardInfoRepository.deleteCardInfoById(id));
+    @CacheEvict(value = "CARD_INFO_CACHE", key = "#id")
+    public CardInfo deleteCardInfoById(final Long id) {
+        return cardInfoRepository.deleteCardInfoById(id);
     }
 }

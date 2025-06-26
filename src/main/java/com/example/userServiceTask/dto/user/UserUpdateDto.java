@@ -2,6 +2,7 @@ package com.example.userServiceTask.dto.user;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import org.hibernate.validator.constraints.Range;
 
 import java.time.LocalDate;
 
@@ -9,7 +10,7 @@ import java.time.LocalDate;
 public class UserUpdateDto {
 
     @NotNull
-    @Size(min = 1)
+    @Range(min = 1)
     private Long id;
 
     @Size(min = 2, max = 25)
