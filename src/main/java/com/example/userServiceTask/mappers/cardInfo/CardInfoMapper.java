@@ -5,7 +5,6 @@ import com.example.userServiceTask.dto.cardInfo.CreateCardInfoDto;
 import com.example.userServiceTask.dto.cardInfo.UpdateCardInfoDto;
 import com.example.userServiceTask.model.CardInfo;
 import com.example.userServiceTask.model.User;
-import jakarta.validation.constraints.NotNull;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
@@ -16,8 +15,6 @@ public interface CardInfoMapper {
     })
     CardInfo fromCreateDto(CreateCardInfoDto createCardInfoDto);
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateFromDto(UpdateCardInfoDto updateCardInfoDto, @MappingTarget CardInfo cardInfo);
 
     @Mappings({
             @Mapping(target = "userId",source = "user", qualifiedByName = "userToUserId")
