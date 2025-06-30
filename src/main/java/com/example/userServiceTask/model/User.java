@@ -23,10 +23,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 25)
     private String name;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 25)
     private String surname;
 
     @Past
@@ -34,7 +34,7 @@ public class User {
     private LocalDate birthDate;
 
     @Email
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, length = 40)
     private String email;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

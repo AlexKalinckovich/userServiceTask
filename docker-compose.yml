@@ -1,8 +1,8 @@
 services:
   app:
     build:
-        context: .
-        dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile
     container_name: user-service-app
     ports:
       - "8080:8080"
@@ -12,11 +12,11 @@ services:
       redis-cache:
         condition: service_started
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/userdb?createDatabaseIfNotExist=true
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: wtpassword
-      SPRING_REDIS_HOST: redis-cache
-      SPRING_REDIS_PORT: 6379
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/userdb?createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=wtpassword
+      - SPRING_REDIS_HOST=redis-cache
+      - SPRING_REDIS_PORT=6379
 
   mysql-db:
     image: mysql:8.0

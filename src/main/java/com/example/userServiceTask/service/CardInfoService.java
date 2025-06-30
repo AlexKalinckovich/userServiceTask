@@ -4,6 +4,7 @@ import com.example.userServiceTask.dto.cardInfo.UpdateCardInfoDto;
 import com.example.userServiceTask.model.CardInfo;
 import com.example.userServiceTask.model.User;
 import com.example.userServiceTask.repositories.CardInfoRepository;
+import com.example.userServiceTask.repositories.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -18,14 +19,14 @@ import java.util.Optional;
 public class CardInfoService {
 
     private final CardInfoRepository cardInfoRepository;
-    private final UserService userService;
+    private final UserRepository userRepository;
 
 
     @Autowired
     public CardInfoService(final CardInfoRepository cardInfoRepository,
-                           final UserService userService) {
+                           final UserRepository userRepository) {
         this.cardInfoRepository = cardInfoRepository;
-        this.userService = userService;
+        this.userRepository = userRepository;
     }
 
     @Transactional
@@ -34,8 +35,12 @@ public class CardInfoService {
         final Optional<User> cardUser = Optional.ofNullable(cardInfo.getUser());
         final Long userId = cardUser.map(User::getId).orElse(null);
 
-        final User user = userService.findUserById(userId);
-        cardInfo.setUser(user);
+        final Optional<User> user = userRepository.findById(userId);
+        if(user.isEmpty()){
+            throw new EntityNotFoundException("User not found");
+        }
+
+        cardInfo.setUser(user.get());
 
         return cardInfoRepository.save(cardInfo);
     }

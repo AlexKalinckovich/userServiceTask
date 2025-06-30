@@ -1,4 +1,21 @@
 spring:
+  config:
+    import: classpath:/constantsForTesting.yml
+  docker:
+    compose:
+      enabled: true
+      file: docker-compose.yml
+      lifecycle-management: start-and-stop
+      start:
+        command: up
+      stop:
+        command: stop
+        timeout: 30s
+      readiness:
+        timeout: 30s
+        tcp:
+          connect-timeout: 10s
+          read-timeout: 5s
   application:
     name: userServiceTask
   datasource:
@@ -7,11 +24,14 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
   jpa:
+    defer-datasource-initialization: true
     hibernate:
-      ddl-auto: create
+      ddl-auto: create-drop
     show-sql: true
     properties:
-      hibernate.format_sql: true
+      hibernate:
+        format_sql: true
+
   liquibase:
     change-log: classpath:db/changelog/changelog-master.xml
   cache:

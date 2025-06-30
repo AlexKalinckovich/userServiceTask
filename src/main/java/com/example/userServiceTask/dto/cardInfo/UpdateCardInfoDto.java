@@ -4,12 +4,14 @@ import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.Range;
 
 import java.time.LocalDate;
 
 @Data
+@Builder
 public class UpdateCardInfoDto {
     @NotNull(message = "Card ID is required")
     @Range(min = 1)

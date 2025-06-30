@@ -27,13 +27,11 @@ public class CardInfo {
     private User user;
 
     @NotBlank
-    @Size(min = 16, max = 16)
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 20)
     private String number;
 
     @NotBlank
-    @Size(max = 100)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 25)
     private String holder;
 
     @Future(message = "Must be future date")

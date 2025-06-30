@@ -1,0 +1,8 @@
+test:
+  resource-path: db/changelog
+  initial-schema: db/changelog/v1-initial-schema.xml
+  my-sql:
+    db-name: userdb
+    image: mysql:8.0
+  redis:
+      image: redis:7.0-alpine
