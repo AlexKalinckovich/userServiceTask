@@ -2,10 +2,12 @@ package com.example.userServiceTask.mappers.cardInfo;
 
 import com.example.userServiceTask.dto.cardInfo.CardInfoResponseDto;
 import com.example.userServiceTask.dto.cardInfo.CreateCardInfoDto;
-import com.example.userServiceTask.dto.cardInfo.UpdateCardInfoDto;
 import com.example.userServiceTask.model.CardInfo;
 import com.example.userServiceTask.model.User;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
+import org.mapstruct.Named;
 
 @Mapper(componentModel = "spring")
 public interface CardInfoMapper {

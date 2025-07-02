@@ -17,6 +17,9 @@ public class UpdateCardInfoDto {
     @Range(min = 1)
     private Long id;
 
+    @Range(min = 1)
+    private Long userId;
+
     @Pattern(regexp = "\\d{16}", message = "Card number must be 16 digits")
     private String number;
 

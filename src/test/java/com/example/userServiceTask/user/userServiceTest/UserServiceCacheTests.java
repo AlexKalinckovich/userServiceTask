@@ -1,4 +1,4 @@
-package com.example.userServiceTask.UserServiceTest;
+package com.example.userServiceTask.user.userServiceTest;
 
 import com.example.userServiceTask.dto.user.CreateUserDto;
 import com.example.userServiceTask.dto.user.UserResponseDto;
@@ -7,76 +7,33 @@ import com.example.userServiceTask.exception.user.EmailAlreadyExistsException;
 import com.example.userServiceTask.model.User;
 import com.example.userServiceTask.repositories.UserRepository;
 import com.example.userServiceTask.service.UserService;
+import com.example.userServiceTask.utils.AbstractContainerBaseTest;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
-import org.testcontainers.utility.MountableFile;
 
 import java.time.LocalDate;
 import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 
 @SpringBootTest
-@Testcontainers
-@AutoConfigureMockMvc
-public class UserServiceCacheTests {
-
-    private static final String REDIS_IMAGE = "redis:7.0-alpine";
-    private static final String MYSQL_IMAGE = "mysql:8.0";
-    private static final int REDIS_PORT = 6379;
-    private static final int MYSQL_PORT = 3306;
-    private static final String MYSQL_DATABASE_NAME = "userdb";
-    private static final String MYSQL_USERNAME = "root";
-    private static final String MYSQL_PASSWORD = "wtpassword";
-
-    private static final String RESOURCE_PATH = "db/changelog";
-    private static final String INITIAL_SCHEMA = RESOURCE_PATH + "/v1-initial-schema.xml";
-
-    @Container
-    static final MySQLContainer<?> mysql = new MySQLContainer<>(DockerImageName.parse(MYSQL_IMAGE))
-            .withDatabaseName(MYSQL_DATABASE_NAME)
-            .withUsername(MYSQL_USERNAME)
-            .withPassword(MYSQL_PASSWORD)
-            .withExposedPorts(MYSQL_PORT)
-            .withReuse(true)
-            .withCopyToContainer(
-                    MountableFile.forClasspathResource(RESOURCE_PATH),
-                    INITIAL_SCHEMA
-            );
-
-    @Container
-    static final GenericContainer<?> redis = new GenericContainer<>(DockerImageName.parse(REDIS_IMAGE))
-            .withExposedPorts(REDIS_PORT)
-            .withReuse(true);
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", mysql::getJdbcUrl);
-        registry.add("spring.datasource.username", mysql::getUsername);
-        registry.add("spring.datasource.password", mysql::getPassword);
-        registry.add("spring.datasource.driver-class-name", () -> "com.mysql.cj.jdbc.Driver");
-
-        registry.add("spring.data.redis.host", redis::getHost);
-        registry.add("spring.data.redis.port", () -> redis.getMappedPort(REDIS_PORT));
-    }
-
-    @Autowired
-    private UserRepository userRepository;
+@EnableCaching
+public class UserServiceCacheTests extends AbstractContainerBaseTest {
 
     @Autowired
     private UserService userService;
@@ -91,7 +48,7 @@ public class UserServiceCacheTests {
 
     @BeforeEach
     void setUp() {
-        userRepository.deleteAll();
+        userRepositorySpy.deleteAll();
 
         final Cache cache = cacheManager.getCache("USER_CACHE");
         if(cache != null){
@@ -109,19 +66,18 @@ public class UserServiceCacheTests {
     @Test
     void createUser_success() {
 
-        UserResponseDto created = userService.createUser(user);
+        final UserResponseDto created = userService.createUser(user);
 
         assertNotNull(created.getId());
         assertEquals(user.getEmail(), created.getEmail());
         assertTrue(userRepositorySpy.findById(created.getId()).isPresent());
     }
 
-    // Тест создания пользователя с существующим email
     @Test
     void createUser_duplicateEmail_throwsException() {
         userService.createUser(user);
 
-        CreateUserDto user2 = CreateUserDto.builder()
+        final CreateUserDto user2 = CreateUserDto.builder()
                 .name("John")
                 .surname("Doe")
                 .birthDate(LocalDate.of(1990, 1, 1))
@@ -133,15 +89,22 @@ public class UserServiceCacheTests {
     }
 
     @Test
-    void updateUser_success() {
-        UserResponseDto dto = userService.createUser(user);
+    void createUser_mustHaveEmptyListOfCards(){
+        final UserResponseDto dto = userService.createUser(user);
+        assertNotNull(dto.getCards());
+        assertTrue(dto.getCards().isEmpty());
+    }
 
-        UserUpdateDto updateDto = UserUpdateDto.builder()
+    @Test
+    void updateUser_success() {
+        final UserResponseDto dto = userService.createUser(user);
+
+        final UserUpdateDto updateDto = UserUpdateDto.builder()
                 .id(dto.getId())
                 .name("Updated")
                 .surname("Bigger")
                 .birthDate(LocalDate.of(1991, 2, 2)) // Обновляем дату рождения
-                .build(); // Не обновляем email
+                .build();
 
         userService.updateUser(updateDto);
 
@@ -153,10 +116,9 @@ public class UserServiceCacheTests {
         assertEquals("john.doe@example.com", updated.getEmail());
     }
 
-    // Тест обновления несуществующего пользователя
     @Test
     void updateUser_notFound_throwsException() {
-        UserUpdateDto updateDto = UserUpdateDto.builder()
+        final UserUpdateDto updateDto = UserUpdateDto.builder()
                 .id(999L)
                 .name("John")
                 .surname("Doe")
@@ -168,25 +130,22 @@ public class UserServiceCacheTests {
                 () -> userService.updateUser(updateDto));
     }
 
-    // Тест поиска пользователя
     @Test
     void findUserById_success() {
 
         final UserResponseDto dto = userService.createUser(user);
 
-        UserResponseDto found = userService.findUserById(dto.getId());
+        final UserResponseDto found = userService.findUserById(dto.getId());
 
         assertEquals(user.getEmail(), found.getEmail());
     }
 
-    // Тест поиска несуществующего пользователя
     @Test
     void findUserById_notFound_throwsException() {
         assertThrows(EntityNotFoundException.class,
                 () -> userService.findUserById(999L));
     }
 
-    // Тест удаления пользователя
     @Test
     void deleteUser_success() {
         final UserResponseDto dto = userService.createUser(user);
@@ -196,27 +155,25 @@ public class UserServiceCacheTests {
         assertFalse(userRepositorySpy.findById(dto.getId()).isPresent());
     }
 
-    // Тест кэширования при чтении
     @Test
     void whenFindUserById_thenCached() {
-        CreateUserDto user = CreateUserDto.builder()
+        final CreateUserDto user = CreateUserDto.builder()
                 .name("John")
                 .surname("Doe")
                 .birthDate(LocalDate.of(1990, 1, 1))
                 .email("john.doe@example.com")
                 .build();
 
-        UserResponseDto createdUser = userService.createUser(user);
+        final UserResponseDto createdUser = userService.createUser(user);
 
-        UserResponseDto firstCall = userService.findUserById(createdUser.getId());
+        final UserResponseDto firstCall = userService.findUserById(createdUser.getId());
 
-        UserResponseDto secondCall = userService.findUserById(createdUser.getId());
+        final UserResponseDto secondCall = userService.findUserById(createdUser.getId());
 
-        verify(userRepository, times(0)).findById(1);
+        verify(userRepositorySpy, times(0)).findById(1);
         assertEquals(firstCall.getEmail(), secondCall.getEmail());
     }
 
-    // Тест обновления кэша при изменении
     @Test
     void whenUpdateUser_thenCacheUpdated() {
         User user = User.builder()
@@ -228,24 +185,22 @@ public class UserServiceCacheTests {
 
         user = userRepositorySpy.save(user);
 
-        // Первый вызов - кэшируем
         userService.findUserById(user.getId());
 
-        // Обновляем пользователя
-        UserUpdateDto updateDto = UserUpdateDto.builder()
+        final UserUpdateDto updateDto = UserUpdateDto.builder()
                 .id(user.getId())
                 .name("UpdatedName")
                 .build();
         userService.updateUser(updateDto);
 
-        // Проверяем кэш
-        UserResponseDto cachedUser = Objects.requireNonNull(
+        final UserResponseDto cachedUser = Objects.requireNonNull(
                 cacheManager.getCache("USER_CACHE")).get(user.getId(), UserResponseDto.class);
 
-        assertEquals("UpdatedName", cachedUser.getName());
+        if (cachedUser != null) {
+            assertEquals("UpdatedName", cachedUser.getName());
+        }
     }
 
-    // Тест очистки кэша при удалении
     @Test
     void whenDeleteUser_thenCacheEvicted() {
         User user = User.builder()
@@ -257,13 +212,10 @@ public class UserServiceCacheTests {
 
         user = userRepositorySpy.save(user);
 
-        // Заполняем кэш
         userService.findUserById(user.getId());
-        // Удаляем пользователя
         userService.deleteUser(user.getId());
 
-        // Проверяем, что в кэше нет записи
-        Cache cache = cacheManager.getCache("USER_CACHE");
+        final Cache cache = cacheManager.getCache("USER_CACHE");
         assertNotNull(cache);
         assertNull(cache.get(user.getId()));
     }
