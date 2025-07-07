@@ -1,8 +1,18 @@
 package com.example.userServiceTask.model;
 
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,13 +37,11 @@ public class CardInfo {
     private User user;
 
     @NotBlank
-    @Size(min = 16, max = 16)
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 20)
     private String number;
 
     @NotBlank
-    @Size(max = 100)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 25)
     private String holder;
 
     @Future(message = "Must be future date")

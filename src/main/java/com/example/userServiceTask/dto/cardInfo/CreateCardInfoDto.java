@@ -1,12 +1,14 @@
 package com.example.userServiceTask.dto.cardInfo;
 
 import jakarta.validation.constraints.*;
+import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.Range;
 
 import java.time.LocalDate;
 
 @Data
+@Builder
 public class CreateCardInfoDto {
     @NotNull(message = "User ID is required")
     @Range(min = 1)
