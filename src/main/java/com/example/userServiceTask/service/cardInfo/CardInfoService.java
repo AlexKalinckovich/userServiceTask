@@ -1,13 +1,13 @@
-package com.example.userServiceTask.service;
+package com.example.userServiceTask.service.cardInfo;
 
 import com.example.userServiceTask.dto.cardInfo.CardInfoResponseDto;
 import com.example.userServiceTask.dto.cardInfo.CreateCardInfoDto;
 import com.example.userServiceTask.dto.cardInfo.UpdateCardInfoDto;
 import com.example.userServiceTask.mappers.cardInfo.CardInfoMapper;
 import com.example.userServiceTask.model.CardInfo;
-import com.example.userServiceTask.model.User;
+import com.example.userServiceTask.model.user.User;
 import com.example.userServiceTask.repositories.CardInfoRepository;
-import com.example.userServiceTask.repositories.UserRepository;
+import com.example.userServiceTask.repositories.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -15,9 +15,6 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.util.Optional;
 
 @Service
 public class CardInfoService {
@@ -38,14 +35,12 @@ public class CardInfoService {
     @Transactional
     @CachePut(value = "CARD_INFO_CACHE", key = "#result.id")
     public CardInfoResponseDto createCardInfo(final CreateCardInfoDto cardInfo) {
-        final Optional<User> cardUser = userRepository.findById(cardInfo.getUserId());
-        if (cardUser.isEmpty()) {
-            throw new EntityNotFoundException("User not found");
-        }
+        final User cardUser = userRepository.findById(cardInfo.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         final CardInfo toSaveCardInfo = cardInfoMapper.fromCreateDto(cardInfo);
 
-        toSaveCardInfo.setUser(cardUser.get());
+        toSaveCardInfo.setUser(cardUser);
 
         return cardInfoMapper.toResponseDto(
                 cardInfoRepository.save(toSaveCardInfo)
@@ -56,58 +51,33 @@ public class CardInfoService {
     @CachePut(value = "CARD_INFO_CACHE", key = "#result.id")
     public CardInfoResponseDto updateCardInfo(final UpdateCardInfoDto updateCardInfoDto) {
         final Long id = updateCardInfoDto.getId();
-        final Optional<CardInfo> cardInfoOptional = cardInfoRepository.findById(id);
-        if(cardInfoOptional.isEmpty()) {
-            throw new EntityNotFoundException("CardInfo with id " + updateCardInfoDto.getId() + " does not exist");
-        }
+        final CardInfo cardInfo = cardInfoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Card not found"));
 
-        final CardInfo originalCardInfo = cardInfoOptional.get();
-        updateCardInfoByCardInfoDto(originalCardInfo, updateCardInfoDto);
+        cardInfoMapper.updateFromDto(updateCardInfoDto, cardInfo);
 
-        return cardInfoMapper.toResponseDto(originalCardInfo);
+        return cardInfoMapper.toResponseDto(cardInfoRepository.save(cardInfo));
     }
 
     @Transactional(readOnly = true)
     @Cacheable(value = "CARD_INFO_CACHE", key = "#id")
     public CardInfoResponseDto getCardInfoById(final Long id) {
-        final Optional<CardInfo> cardInfoOptional = cardInfoRepository.findById(id);
-        if(cardInfoOptional.isEmpty()) {
-            throw new EntityNotFoundException("CardInfo with id " + id + " does not exist");
-        }
+        final CardInfo cardInfoOptional = cardInfoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Card not found"));
 
-        return cardInfoMapper.toResponseDto(
-                cardInfoOptional.get()
-        );
+        return cardInfoMapper.toResponseDto(cardInfoOptional);
     }
 
 
     @Transactional
     @CacheEvict(value = "CARD_INFO_CACHE", key = "#id")
     public int deleteCardInfoById(final Long id) {
+
+        if(!cardInfoRepository.existsById(id)) {
+            throw new EntityNotFoundException("Card not found");
+        }
+
         return cardInfoRepository.deleteCardInfoById(id);
     }
 
-    private void updateCardInfoByCardInfoDto(final CardInfo cardInfo, final UpdateCardInfoDto updateDto) {
-        final String holder = cardInfo.getHolder();
-
-        if(holder != null && !holder.isBlank()) {
-            cardInfo.setHolder(updateDto.getHolder());
-        }
-
-        final LocalDate currentValue = updateDto.getExpirationDate();
-        if(currentValue != null){
-            cardInfo.setExpirationDate(currentValue);
-        }
-
-        final String number = updateDto.getNumber();
-        if(number != null && !number.isBlank()) {
-            cardInfo.setNumber(number);
-        }
-
-        final Long userId = updateDto.getUserId();
-        if(userId != null) {
-            final Optional<User> userOptional = userRepository.findById(userId);
-            userOptional.ifPresent(cardInfo::setUser);
-        }
-    }
 }

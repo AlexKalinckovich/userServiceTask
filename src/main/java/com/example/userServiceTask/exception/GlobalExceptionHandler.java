@@ -1,9 +1,14 @@
 package com.example.userServiceTask.exception;
 
 
+import com.example.userServiceTask.exception.security.response.ExceptionResponseService;
 import com.example.userServiceTask.exception.user.EmailAlreadyExistsException;
+import com.example.userServiceTask.messageConstants.ErrorMessage;
+import com.example.userServiceTask.service.messages.MessageService;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -20,13 +25,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 @ControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+
+    private final MessageService messageService;
+    private final ExceptionResponseService exceptionResponseService;
+
 
     @Override
     @Nullable
     protected ResponseEntity<Object> handleMethodArgumentNotValid(final MethodArgumentNotValidException ex,
-                                                                  final HttpHeaders headers,
-                                                                  final HttpStatusCode status,
+                                                                  final @NotNull HttpHeaders headers,
+                                                                  final @NotNull HttpStatusCode status,
                                                                   final WebRequest request) {
 
         final Map<String, String> errors = new HashMap<>();
@@ -41,7 +51,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         final ErrorResponse errorResponse = new ErrorResponse(
                 Instant.now(),
                 HttpStatus.BAD_REQUEST.value(),
-                "Validation failed",
+                messageService.getMessage(ErrorMessage.VALIDATION_ERROR),
                 request.getDescription(false),
                 errors
         );
@@ -54,11 +64,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             final EmailAlreadyExistsException ex,
             final WebRequest request) {
 
-        return buildErrorResponse(
-                ex,
-                request,
+        return exceptionResponseService.buildWebRequestErrorResponse(
+                ex, request,
                 HttpStatus.CONFLICT,
-                "Email already registered"
+                messageService.getMessage(ErrorMessage.EMAIL_ALREADY_EXISTS)
         );
     }
 
@@ -67,28 +76,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             final EntityNotFoundException ex,
             final WebRequest request) {
 
-        return buildErrorResponse(
-                ex,
-                request,
+        return exceptionResponseService.buildWebRequestErrorResponse(
+                ex, request,
                 HttpStatus.NOT_FOUND,
-                "Resource not found"
+                messageService.getMessage(ErrorMessage.RESOURCE_NOT_FOUND)
         );
     }
 
-    private ResponseEntity<ErrorResponse> buildErrorResponse(
-            final Exception ex,
-            final WebRequest request,
-            final HttpStatus status,
-            final String message) {
 
-        final ErrorResponse errorResponse = new ErrorResponse(
-                Instant.now(),
-                status.value(),
-                message,
-                request.getDescription(false),
-                Map.of("error", ex.getMessage())
-        );
 
-        return new ResponseEntity<>(errorResponse, status);
-    }
 }

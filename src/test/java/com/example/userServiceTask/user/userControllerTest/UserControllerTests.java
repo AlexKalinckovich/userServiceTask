@@ -4,7 +4,9 @@ import com.example.userServiceTask.controller.user.UserController;
 import com.example.userServiceTask.dto.user.CreateUserDto;
 import com.example.userServiceTask.dto.user.UserResponseDto;
 import com.example.userServiceTask.dto.user.UserUpdateDto;
-import com.example.userServiceTask.service.UserService;
+import com.example.userServiceTask.messageConstants.ErrorMessage;
+import com.example.userServiceTask.service.messages.MessageService;
+import com.example.userServiceTask.service.user.UserService;
 import com.example.userServiceTask.utils.AbstractContainerBaseTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -27,6 +29,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(UserController.class)
 public class UserControllerTests extends AbstractContainerBaseTest {
+
+    private final MessageService messageService;
+
+    @Autowired
+    public UserControllerTests(final MessageService messageService) {
+        this.messageService = messageService;
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -53,6 +62,8 @@ public class UserControllerTests extends AbstractContainerBaseTest {
             .birthDate(LocalDate.of(1990, 1, 1))
             .cards(Collections.emptyList())
             .build();
+
+
 
     @Test
     void createUser_ValidInput_ReturnsCreated() throws Exception {
@@ -82,7 +93,7 @@ public class UserControllerTests extends AbstractContainerBaseTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidDto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Validation failed"))
+                .andExpect(jsonPath("$.error").value(messageService.getMessage(ErrorMessage.VALIDATION_ERROR)))
                 .andExpect(jsonPath("$.details.email").value("must not be blank"));
     }
 
@@ -105,7 +116,7 @@ public class UserControllerTests extends AbstractContainerBaseTest {
 
         mockMvc.perform(get("/users/999"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Resource not found"));
+                .andExpect(jsonPath("$.error").value(messageService.getMessage(ErrorMessage.RESOURCE_NOT_FOUND)));
     }
 
     @Test

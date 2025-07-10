@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog">
+
+    <changeSet id="3" author="dev">
+        <modifyDataType
+                tableName="user_credentials"
+                columnName="password_hash"
+                newDataType="VARCHAR(60)"/>
+
+        <addColumn tableName="user_credentials">
+            <column name="role" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <createIndex
+                tableName="user_credentials"
+                indexName="idx_user_credentials_user">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

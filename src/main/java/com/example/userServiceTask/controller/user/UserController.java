@@ -3,7 +3,7 @@ package com.example.userServiceTask.controller.user;
 import com.example.userServiceTask.dto.user.CreateUserDto;
 import com.example.userServiceTask.dto.user.UserResponseDto;
 import com.example.userServiceTask.dto.user.UserUpdateDto;
-import com.example.userServiceTask.service.UserService;
+import com.example.userServiceTask.service.user.UserService;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +21,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/user")
 public class UserController {
 
     private final UserService userService;

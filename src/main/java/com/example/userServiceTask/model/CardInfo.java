@@ -1,6 +1,7 @@
 package com.example.userServiceTask.model;
 
 
+import com.example.userServiceTask.model.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

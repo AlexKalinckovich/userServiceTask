@@ -10,6 +10,9 @@ env:
   SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/userdb?createDatabaseIfNotExist=true
   SPRING_DATASOURCE_USERNAME: root
   SPRING_DATASOURCE_PASSWORD: wtpassword
+  SPRING_AUTH_DATASOURCE_URL: jdbc:mysql://localhost:3307/authdb?createDatabaseIfNotExist=true
+  SPRING_AUTH_DATASOURCE_USERNAME: root
+  SPRING_AUTH_DATASOURCE_PASSWORD: authpassword
   SPRING_REDIS_HOST: localhost
   SPRING_REDIS_PORT: 6379
 
@@ -29,6 +32,14 @@ jobs:
         image: redis:7-alpine
         ports:
           - 6379:6379
+      mysql-authdb:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: authpassword
+          MYSQL_DATABASE: authdb
+        ports:
+          - 3307:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
       - name: Checkout code
