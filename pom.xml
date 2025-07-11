@@ -9,7 +9,7 @@
 		<relativePath/>
 	</parent>
 	<groupId>com.example</groupId>
-	<artifactId>userServiceTask</artifactId>
+	<artifactId>userService</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>userServiceTask</name>
 	<description>UserService task</description>
