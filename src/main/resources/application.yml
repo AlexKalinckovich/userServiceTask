@@ -1,9 +1,8 @@
 spring:
   config:
-
-    import: classpath:security.properties, classpath:error_message.properties
+    import: classpath:error-message.properties
   application:
-    name: userServiceTask
+    name: user-service
 
   datasource:
     name: userDataSource

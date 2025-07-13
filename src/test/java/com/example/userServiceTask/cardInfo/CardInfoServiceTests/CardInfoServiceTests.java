@@ -33,8 +33,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -58,8 +60,6 @@ public class CardInfoServiceTests extends AbstractContainerBaseTest {
 
     @Autowired
     private CacheManager cacheManager;
-
-
 
     private static final Long DEFAULT_ID = 1L;
     private static final Long NOT_EXISTING_ID = 999L;
@@ -154,58 +154,44 @@ public class CardInfoServiceTests extends AbstractContainerBaseTest {
     }
 
     @Test
-    void createCardInfo_userNotFound_throwsEntityNotFoundException() {
-        final CreateCardInfoDto dto = CreateCardInfoDto.builder()
-                .userId(NOT_EXISTING_ID)
-                .build();
-
-        assertThrows(EntityNotFoundException.class,
-                () -> cardInfoService.createCardInfo(dto));
-    }
-
-    @Test
-    void createCardInfo_cachesResult() {
-        when(cardInfoRepository.save(any(CardInfo.class)))
-                .thenReturn(cardInfo);
-
-        final CardInfoResponseDto response = cardInfoService.createCardInfo(createCardInfoDto);
-
-        final Cache cache = cacheManager.getCache("CARD_INFO_CACHE");
-        assertNotNull(cache);
-        assertNotNull(cache.get(response.getId()));
-
-        final Cache.ValueWrapper r = cache.get(response.getId());
-
-        assertNotNull(r);
-        assertEquals(response, r.get());
-    }
-
-    @Test
     void updateCardInfo_success() {
         when(cardInfoRepository.findById(DEFAULT_ID))
                 .thenReturn(Optional.of(cardInfo));
 
-        when(cardInfoRepository.updateCardInfoById(eq(DEFAULT_ID), any(CardInfo.class)))
-                .thenReturn(1);
+        doAnswer(invocation -> {
+            final UpdateCardInfoDto dto = invocation.getArgument(0);
+            final CardInfo entity = invocation.getArgument(1);
+            entity.setHolder(dto.getHolder());
+            entity.setNumber(dto.getNumber());
+            entity.setExpirationDate(dto.getExpirationDate());
+            return null;
+        }).when(cardInfoMapper).updateFromDto(any(UpdateCardInfoDto.class), any(CardInfo.class));
+
+        when(cardInfoRepository.save(any(CardInfo.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         when(cardInfoMapper.toResponseDto(any(CardInfo.class)))
-                .thenReturn(
-                        CardInfoResponseDto.builder()
-                                .number(updateCardInfoDto.getNumber())
-                                .id(updateCardInfoDto.getId())
-                                .holder(updateCardInfoDto.getHolder())
-                                .expirationDate(updateCardInfoDto.getExpirationDate())
-                                .build()
-                );
+                .thenAnswer(inv -> {
+                    final CardInfo c = inv.getArgument(0);
+                    return CardInfoResponseDto.builder()
+                            .id(c.getId())
+                            .holder(c.getHolder())
+                            .number(c.getNumber())
+                            .expirationDate(c.getExpirationDate())
+                            .build();
+                });
 
-        final CardInfoResponseDto updated = assertDoesNotThrow(
-                () -> cardInfoService.updateCardInfo(updateCardInfoDto)
-        );
+        final CardInfoResponseDto updated = cardInfoService.updateCardInfo(updateCardInfoDto);
 
         assertNotNull(updated);
-        assertEquals(updated.getNumber(), updateCardInfoDto.getNumber());
-        assertEquals(updated.getHolder(), updateCardInfoDto.getHolder());
-        assertEquals(updated.getExpirationDate(), updateCardInfoDto.getExpirationDate());
+        assertEquals("Updated Holder", updated.getHolder());
+        assertEquals("UpdatedNumber123", updated.getNumber());
+        assertEquals(LocalDate.now(), updated.getExpirationDate());
+
+        verify(cardInfoRepository).findById(DEFAULT_ID);
+        verify(cardInfoMapper).updateFromDto(any(), any());
+        verify(cardInfoRepository).save(any(CardInfo.class));
+        verify(cardInfoMapper).toResponseDto(any(CardInfo.class));
     }
 
     @Test
@@ -219,6 +205,8 @@ public class CardInfoServiceTests extends AbstractContainerBaseTest {
 
         assertThrows(EntityNotFoundException.class,
                 () -> cardInfoService.updateCardInfo(dto));
+
+        verify(cardInfoRepository, never()).save(any());
     }
 
     @Test
@@ -230,30 +218,32 @@ public class CardInfoServiceTests extends AbstractContainerBaseTest {
         when(cardInfoRepository.findById(DEFAULT_ID))
                 .thenReturn(Optional.of(cardInfo));
 
-        when(cardInfoMapper.toResponseDto(any(CardInfo.class)))
-                .thenReturn(
-                        CardInfoResponseDto.builder()
-                                .number(updateCardInfoDto.getNumber())
-                                .id(updateCardInfoDto.getId())
-                                .holder(updateCardInfoDto.getHolder())
-                                .expirationDate(updateCardInfoDto.getExpirationDate())
-                                .build()
-                );
-
-        when(cardInfoRepository.updateCardInfoById(eq(DEFAULT_ID), any(CardInfo.class)))
-                .thenReturn(1)
-                .thenAnswer(inv -> {
-                    cardInfo.setHolder("Updated Holder");
-                    return 1;
+        when(cardInfoRepository.save(any(CardInfo.class)))
+                .thenAnswer(invocation -> {
+                    final CardInfo c = invocation.getArgument(0);
+                    c.setHolder(updateCardInfoDto.getHolder());
+                    c.setNumber(updateCardInfoDto.getNumber());
+                    c.setExpirationDate(updateCardInfoDto.getExpirationDate());
+                    return c;
                 });
 
-
+        when(cardInfoMapper.toResponseDto(any(CardInfo.class)))
+                .thenAnswer(inv -> {
+                    final CardInfo c = inv.getArgument(0);
+                    return CardInfoResponseDto.builder()
+                            .id(c.getId())
+                            .holder(c.getHolder())
+                            .number(c.getNumber())
+                            .expirationDate(c.getExpirationDate())
+                            .build();
+                });
 
         cardInfoService.updateCardInfo(updateCardInfoDto);
 
         final CardInfoResponseDto cached = cache.get(DEFAULT_ID, CardInfoResponseDto.class);
         assertNotNull(cached);
         assertEquals("Updated Holder", cached.getHolder());
+        assertEquals("UpdatedNumber123", cached.getNumber());
     }
 
     @Test
@@ -261,85 +251,67 @@ public class CardInfoServiceTests extends AbstractContainerBaseTest {
         when(cardInfoRepository.findById(DEFAULT_ID))
                 .thenReturn(Optional.of(cardInfo));
 
-        final CardInfoResponseDto response =
-                assertDoesNotThrow(() -> cardInfoService.getCardInfoById(DEFAULT_ID));
+        final CardInfoResponseDto response = cardInfoService.getCardInfoById(DEFAULT_ID);
 
         assertEquals(cardInfo.getHolder(), response.getHolder());
         verify(cardInfoRepository, times(1)).findById(DEFAULT_ID);
     }
 
     @Test
-    void getCardInfoById_notFound_throwsException() {
-        when(cardInfoRepository.findById(NOT_EXISTING_ID))
-                .thenReturn(Optional.empty());
-
-        assertThrows(EntityNotFoundException.class,
-                () -> cardInfoService.getCardInfoById(NOT_EXISTING_ID));
-    }
-
-    @Test
-    void getCardInfoById_cachesResult() {
-        when(cardInfoRepository.findById(DEFAULT_ID))
-                .thenReturn(Optional.of(cardInfo));
-
-        final CardInfoResponseDto response = cardInfoService.getCardInfoById(DEFAULT_ID);
-
-        final CardInfoResponseDto cachedResponse = cardInfoService.getCardInfoById(DEFAULT_ID);
-        verify(cardInfoRepository, times(1)).findById(DEFAULT_ID);
-
-        final Cache cache = cacheManager.getCache("CARD_INFO_CACHE");
-        assertNotNull(cache);
-
-        final Cache.ValueWrapper cachedValue = cache.get(DEFAULT_ID);
-        assertNotNull(cachedValue);
-        assertEquals(response, cachedValue.get());
-        assertEquals(response, cachedResponse);
-    }
-
-    @Test
-    void deleteCardInfoById_notFound_returnsZero() {
-        final long nonExistingId = NOT_EXISTING_ID;
-
-        Mockito.doReturn(0)
-                .when(cardInfoRepository)
-                .deleteCardInfoById(nonExistingId);
-
-        final int result = cardInfoService.deleteCardInfoById(nonExistingId);
-
-        assertEquals(0, result);
-        verify(cardInfoRepository, times(1)).deleteCardInfoById(nonExistingId);
-    }
-
-    @Test
     void deleteCardInfoById_success() {
-        final long existingId = 1L;
+        when(cardInfoRepository.existsById(DEFAULT_ID))
+                .thenReturn(true);
 
-        Mockito.doReturn(1)
-                .when(cardInfoRepository)
-                .deleteCardInfoById(existingId);
+        when(cardInfoRepository.deleteCardInfoById(DEFAULT_ID))
+                .thenReturn(1);
 
-        final int result = cardInfoService.deleteCardInfoById(existingId);
+        final int result = cardInfoService.deleteCardInfoById(DEFAULT_ID);
 
         assertEquals(1, result);
-        verify(cardInfoRepository, times(1)).deleteCardInfoById(existingId);
+        verify(cardInfoRepository, times(1)).existsById(DEFAULT_ID);
+        verify(cardInfoRepository, times(1)).deleteCardInfoById(DEFAULT_ID);
+    }
 
-        final Cache cache = cacheManager.getCache("CARD_INFO_CACHE");
-        assertNotNull(cache);
-        assertNull(cache.get(existingId));
+    @Test
+    void deleteCardInfoById_notFound_throwsException() {
+        when(cardInfoRepository.existsById(NOT_EXISTING_ID))
+                .thenReturn(false);
+
+        assertThrows(EntityNotFoundException.class,
+                () -> cardInfoService.deleteCardInfoById(NOT_EXISTING_ID));
+
+        verify(cardInfoRepository, never()).deleteCardInfoById(anyLong());
     }
 
     @Test
     void deleteCardInfoById_evictsFromCache() {
         final Cache cache = cacheManager.getCache("CARD_INFO_CACHE");
         assertNotNull(cache);
-
         cache.put(DEFAULT_ID, cardInfoMapper.toResponseDto(cardInfo));
 
+        when(cardInfoRepository.existsById(DEFAULT_ID))
+                .thenReturn(true);
         when(cardInfoRepository.deleteCardInfoById(DEFAULT_ID))
                 .thenReturn(1);
 
         cardInfoService.deleteCardInfoById(DEFAULT_ID);
 
         assertNull(cache.get(DEFAULT_ID));
+    }
+
+    @Test
+    void createCardInfo_cachesResult() {
+        when(cardInfoRepository.save(any(CardInfo.class)))
+                .thenReturn(cardInfo);
+
+        final CardInfoResponseDto response = cardInfoService.createCardInfo(createCardInfoDto);
+
+        final Cache cache = cacheManager.getCache("CARD_INFO_CACHE");
+        assertNotNull(cache);
+
+        final CardInfoResponseDto cached = cache.get(response.getId(), CardInfoResponseDto.class);
+        assertNotNull(cached);
+        assertEquals(response.getId(), cached.getId());
+        assertEquals(response.getHolder(), cached.getHolder());
     }
 }

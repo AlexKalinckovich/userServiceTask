@@ -6,7 +6,6 @@ import com.example.userServiceTask.messageConstants.ErrorMessage;
 import com.example.userServiceTask.service.messages.MessageService;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,11 +23,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 @ControllerAdvice
-@RequiredArgsConstructor
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private final MessageService messageService;
     private final ExceptionResponseService exceptionResponseService;
+
+    public GlobalExceptionHandler(final MessageService messageService,
+                                  final ExceptionResponseService exceptionResponseService) {
+        this.messageService = messageService;
+        this.exceptionResponseService = exceptionResponseService;
+    }
 
     @Override
     @Nullable

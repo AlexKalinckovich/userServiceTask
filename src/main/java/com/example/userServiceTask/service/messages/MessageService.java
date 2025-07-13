@@ -2,7 +2,6 @@ package com.example.userServiceTask.service.messages;
 
 import com.example.userServiceTask.messageConstants.ErrorMessage;
 import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Locale;
