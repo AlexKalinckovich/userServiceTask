@@ -67,8 +67,9 @@ jobs:
       - name: SonarQube Scan
         uses: sonarsource/sonarcloud-github-action@v2
         with:
-          projectKey: AlexKalinckovich_userServiceTask
-          organization: AlexKalinckovich
+          args: >
+            -Dsonar.projectKey=AlexKalinckovich_userServiceTask
+            -Dsonar.organization=alexkalinckovich
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
