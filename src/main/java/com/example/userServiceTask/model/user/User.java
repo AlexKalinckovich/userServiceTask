@@ -1,5 +1,6 @@
-package com.example.userServiceTask.model;
+package com.example.userServiceTask.model.user;
 
+import com.example.userServiceTask.model.CardInfo;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.Email;
@@ -21,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", schema = "userdb")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

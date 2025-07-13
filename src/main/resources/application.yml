@@ -1,26 +1,23 @@
 spring:
-  docker:
-    compose:
-      enabled: true
-      file: docker-compose.yml
-      lifecycle-management: start-and-stop
-      start:
-        command: up
-      stop:
-        command: stop
-        timeout: 30s
-      readiness:
-        timeout: 30s
-        tcp:
-          connect-timeout: 10s
-          read-timeout: 5s
+  config:
+    import: classpath:error-message.properties
   application:
-    name: userServiceTask
+    name: user-service
+
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
+    name: userDataSource
+    url: jdbc:mysql://localhost:3306/userdb?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    username: root
+    password: wtpassword
+
+  auth-datasource:
+    name: authDataSource
+    url: jdbc:mysql://localhost:3307/authdb?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: authpassword
+
   jpa:
     defer-datasource-initialization: true
     hibernate:
@@ -32,9 +29,10 @@ spring:
 
   liquibase:
     change-log: classpath:db/changelog/changelog-master.xml
+
   cache:
     type: redis
   data:
     redis:
-      port: ${SPRING_REDIS_PORT}
-      host: ${SPRING_REDIS_HOST}
+      port: 6379
+      host: localhost

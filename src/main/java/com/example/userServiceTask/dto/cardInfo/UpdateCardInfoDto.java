@@ -6,7 +6,6 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
-import org.hibernate.validator.constraints.Range;
 
 import java.time.LocalDate;
 
@@ -14,10 +13,8 @@ import java.time.LocalDate;
 @Builder
 public class UpdateCardInfoDto {
     @NotNull(message = "Card ID is required")
-    @Range(min = 1)
     private Long id;
 
-    @Range(min = 1)
     private Long userId;
 
     @Pattern(regexp = "\\d{16}", message = "Card number must be 16 digits")

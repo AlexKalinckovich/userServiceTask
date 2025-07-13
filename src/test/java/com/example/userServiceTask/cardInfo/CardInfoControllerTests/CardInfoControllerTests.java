@@ -1,10 +1,14 @@
 package com.example.userServiceTask.cardInfo.CardInfoControllerTests;
 
+import com.example.userServiceTask.config.MessageConfig;
 import com.example.userServiceTask.controller.cardInfo.CardInfoController;
 import com.example.userServiceTask.dto.cardInfo.CardInfoResponseDto;
 import com.example.userServiceTask.dto.cardInfo.CreateCardInfoDto;
 import com.example.userServiceTask.dto.cardInfo.UpdateCardInfoDto;
-import com.example.userServiceTask.service.CardInfoService;
+import com.example.userServiceTask.exception.ExceptionResponseService;
+import com.example.userServiceTask.messageConstants.ErrorMessage;
+import com.example.userServiceTask.service.cardInfo.CardInfoService;
+import com.example.userServiceTask.service.messages.MessageService;
 import com.example.userServiceTask.utils.AbstractContainerBaseTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -14,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -34,7 +39,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CardInfoController.class)
+@Import({MessageService.class, ExceptionResponseService.class, MessageConfig.class})
 public class CardInfoControllerTests extends AbstractContainerBaseTest {
+
 
     @Autowired
     private MockMvc mockMvc;
@@ -148,11 +155,11 @@ public class CardInfoControllerTests extends AbstractContainerBaseTest {
     @Test
     void getCardInfo_NotExistingId_ReturnsNotFound() throws Exception {
         when(cardInfoService.getCardInfoById(INVALID_ID))
-                .thenThrow(new EntityNotFoundException("CardInfo not found"));
+                .thenThrow(new EntityNotFoundException(ErrorMessage.RESOURCE_NOT_FOUND.getKey()));
 
         mockMvc.perform(get("/cardInfo/{id}", INVALID_ID))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Resource not found"));
+                .andExpect(jsonPath("$.details.Error").value(ErrorMessage.RESOURCE_NOT_FOUND.getKey()));
 
         verify(cardInfoService, times(1)).getCardInfoById(INVALID_ID);
     }
@@ -178,13 +185,13 @@ public class CardInfoControllerTests extends AbstractContainerBaseTest {
                         .id(INVALID_ID).expirationDate(LocalDate.MAX).build();
 
         when(cardInfoService.updateCardInfo(any()))
-                .thenThrow(new EntityNotFoundException("CardInfo not found"));
+                .thenThrow(new EntityNotFoundException(ErrorMessage.RESOURCE_NOT_FOUND.getKey()));
 
         mockMvc.perform(put("/cardInfo/update")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidDto)))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.details.error").value("CardInfo not found"));
+                .andExpect(jsonPath("$.details.Error").value(ErrorMessage.RESOURCE_NOT_FOUND.getKey()));
 
         verify(cardInfoService, times(1)).updateCardInfo(any());
     }

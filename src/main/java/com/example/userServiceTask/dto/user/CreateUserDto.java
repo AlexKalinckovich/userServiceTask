@@ -1,6 +1,5 @@
 package com.example.userServiceTask.dto.user;
 
-
 import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Data;

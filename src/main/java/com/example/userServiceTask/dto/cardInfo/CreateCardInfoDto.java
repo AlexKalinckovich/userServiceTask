@@ -3,7 +3,6 @@ package com.example.userServiceTask.dto.cardInfo;
 import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Data;
-import org.hibernate.validator.constraints.Range;
 
 import java.time.LocalDate;
 
@@ -11,7 +10,6 @@ import java.time.LocalDate;
 @Builder
 public class CreateCardInfoDto {
     @NotNull(message = "User ID is required")
-    @Range(min = 1)
     private Long userId;
 
     @NotBlank(message = "Card number is required")

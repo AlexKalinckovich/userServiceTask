@@ -1,29 +1,25 @@
-package com.example.userServiceTask.service;
+package com.example.userServiceTask.service.user;
 
 import com.example.userServiceTask.dto.user.CreateUserDto;
 import com.example.userServiceTask.dto.user.UserResponseDto;
 import com.example.userServiceTask.dto.user.UserUpdateDto;
 import com.example.userServiceTask.exception.user.EmailAlreadyExistsException;
 import com.example.userServiceTask.mappers.user.UserMapper;
-import com.example.userServiceTask.model.User;
-import com.example.userServiceTask.repositories.UserRepository;
+import com.example.userServiceTask.model.user.User;
+import com.example.userServiceTask.repositories.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-
 
     @Autowired
     public UserService(final UserRepository userRepository,
@@ -32,11 +28,11 @@ public class UserService {
         this.userMapper = userMapper;
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     @CachePut(value = "USER_CACHE", key = "#result.id")
     public UserResponseDto createUser(final CreateUserDto createUser) {
 
-        if(userRepository.findByEmail(createUser.getEmail()).isPresent()) {
+        if(userRepository.existsByEmail(createUser.getEmail())) {
             throw new EmailAlreadyExistsException("User with email already exists");
         }
 
@@ -51,55 +47,37 @@ public class UserService {
         final User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-        updateUserByUpdateDto(user, userUpdateDto);
-        userRepository.updateUser(id, user);
-        return userMapper.toResponseDto(user);
+        userMapper.updateFromDto(userUpdateDto, user);
+
+        final String dtoEmail = userUpdateDto.getEmail();
+        final String userEmail = user.getEmail();
+        if(dtoEmail != null && !userEmail.equals(dtoEmail)) {
+            if(userRepository.existsByEmail(dtoEmail)) {
+                throw new EmailAlreadyExistsException("User with email already exists");
+            }
+        }
+
+        return userMapper.toResponseDto(userRepository.save(user));
     }
 
     @Transactional(readOnly = true)
     @Cacheable(value = "USER_CACHE", key = "#id")
     public UserResponseDto findUserById(final Long id) {
-        final Optional<User> user = userRepository.findById(id);
-        if(user.isEmpty()){
-            throw new EntityNotFoundException("User with id " + id + " not found");
-        }
-
-        return userMapper.toResponseDto(user.get());
+        final User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
+        return userMapper.toResponseDto(user);
     }
 
 
     @Transactional
     @CacheEvict(value = "USER_CACHE", key = "#id")
     public int deleteUser(final Long id) {
-        final Optional<User> user = userRepository.findById(id);
-        if(user.isEmpty()){
+
+        if (!userRepository.existsById(id)) {
             throw new EntityNotFoundException("User with id " + id + " not found");
         }
 
         return userRepository.deleteUserById(id);
-    }
-
-
-    private void updateUserByUpdateDto(final User user, final UserUpdateDto updateDto) {
-        if (updateDto.getName() != null && !updateDto.getName().isBlank()) {
-            user.setName(updateDto.getName());
-        }
-
-        if (updateDto.getSurname() != null && !updateDto.getSurname().isBlank()) {
-            user.setSurname(updateDto.getSurname());
-        }
-
-        if (updateDto.getEmail() != null && !updateDto.getEmail().isBlank()) {
-            if (!user.getEmail().equals(updateDto.getEmail()) &&
-                    userRepository.existsByEmail(updateDto.getEmail())) {
-                throw new EmailAlreadyExistsException("Email already in use");
-            }
-            user.setEmail(updateDto.getEmail());
-        }
-
-        if (updateDto.getBirthDate() != null) {
-            user.setBirthDate(updateDto.getBirthDate());
-        }
     }
 
 }

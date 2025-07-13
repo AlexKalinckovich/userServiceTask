@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @Builder
 public class UserUpdateDto {
     @NotNull(message = "ID cannot be null")
-    @Min(value = 1, message = "ID must be positive")
+    @Range(min = 1, message = "ID must be positive")
     private Long id;
 
     @Size(min = 2, max = 25, message = "Name must be between 2 and 25 characters")

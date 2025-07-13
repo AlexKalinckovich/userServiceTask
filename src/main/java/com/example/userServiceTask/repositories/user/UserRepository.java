@@ -1,6 +1,6 @@
-package com.example.userServiceTask.repositories;
+package com.example.userServiceTask.repositories.user;
 
-import com.example.userServiceTask.model.User;
+import com.example.userServiceTask.model.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
