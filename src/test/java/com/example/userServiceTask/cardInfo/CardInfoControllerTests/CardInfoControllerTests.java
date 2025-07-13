@@ -1,9 +1,9 @@
 package com.example.userServiceTask.cardInfo.CardInfoControllerTests;
 
-import com.example.dto.cardInfo.CardInfoResponseDto;
-import com.example.dto.cardInfo.CreateCardInfoDto;
-import com.example.dto.cardInfo.UpdateCardInfoDto;
 import com.example.userServiceTask.controller.cardInfo.CardInfoController;
+import com.example.userServiceTask.dto.cardInfo.CardInfoResponseDto;
+import com.example.userServiceTask.dto.cardInfo.CreateCardInfoDto;
+import com.example.userServiceTask.dto.cardInfo.UpdateCardInfoDto;
 import com.example.userServiceTask.service.cardInfo.CardInfoService;
 import com.example.userServiceTask.utils.AbstractContainerBaseTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
