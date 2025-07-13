@@ -66,6 +66,9 @@ jobs:
           distribution: 'temurin'
       - name: SonarQube Scan
         uses: sonarsource/sonarcloud-github-action@v2
+        with:
+          projectKey: AlexKalinckovich_userServiceTask
+          organization: AlexKalinckovich
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
