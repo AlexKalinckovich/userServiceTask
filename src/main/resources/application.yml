@@ -11,13 +11,6 @@ spring:
     username: root
     password: wtpassword
 
-  auth-datasource:
-    name: authDataSource
-    url: jdbc:mysql://localhost:3307/authdb?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: authpassword
-
   jpa:
     defer-datasource-initialization: true
     hibernate:
