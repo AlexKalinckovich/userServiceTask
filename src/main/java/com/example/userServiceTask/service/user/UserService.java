@@ -1,8 +1,8 @@
 package com.example.userServiceTask.service.user;
 
-import com.example.userServiceTask.dto.user.CreateUserDto;
-import com.example.userServiceTask.dto.user.UserResponseDto;
-import com.example.userServiceTask.dto.user.UserUpdateDto;
+import com.example.dto.user.CreateUserDto;
+import com.example.dto.user.UserResponseDto;
+import com.example.dto.user.UserUpdateDto;
 import com.example.userServiceTask.exception.user.EmailAlreadyExistsException;
 import com.example.userServiceTask.mappers.user.UserMapper;
 import com.example.userServiceTask.model.user.User;
@@ -14,8 +14,6 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 public class UserService {

@@ -1,9 +1,8 @@
 package com.example.userServiceTask.mappers.user;
 
-import com.example.userServiceTask.dto.user.CreateUserDto;
-import com.example.userServiceTask.dto.user.UserResponseDto;
-
-import com.example.userServiceTask.dto.user.UserUpdateDto;
+import com.example.dto.user.CreateUserDto;
+import com.example.dto.user.UserResponseDto;
+import com.example.dto.user.UserUpdateDto;
 import com.example.userServiceTask.mappers.cardInfo.CardInfoMapper;
 import com.example.userServiceTask.model.user.User;
 import org.mapstruct.BeanMapping;

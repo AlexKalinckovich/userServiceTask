@@ -1,7 +1,6 @@
 package com.example.userServiceTask.exception;
 
 
-import com.example.userServiceTask.exception.security.response.ExceptionResponseService;
 import com.example.userServiceTask.exception.user.EmailAlreadyExistsException;
 import com.example.userServiceTask.messageConstants.ErrorMessage;
 import com.example.userServiceTask.service.messages.MessageService;
@@ -30,7 +29,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private final MessageService messageService;
     private final ExceptionResponseService exceptionResponseService;
-
 
     @Override
     @Nullable

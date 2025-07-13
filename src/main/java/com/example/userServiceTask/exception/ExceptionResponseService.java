@@ -1,4 +1,4 @@
-package com.example.userServiceTask.exception.security.response;
+package com.example.userServiceTask.exception;
 
 import com.example.userServiceTask.exception.ErrorResponse;
 import com.example.userServiceTask.messageConstants.ErrorMessage;

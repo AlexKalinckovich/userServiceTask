@@ -1,8 +1,8 @@
 package com.example.userServiceTask.controller.cardInfo;
 
-import com.example.userServiceTask.dto.cardInfo.CardInfoResponseDto;
-import com.example.userServiceTask.dto.cardInfo.CreateCardInfoDto;
-import com.example.userServiceTask.dto.cardInfo.UpdateCardInfoDto;
+import com.example.dto.cardInfo.CardInfoResponseDto;
+import com.example.dto.cardInfo.CreateCardInfoDto;
+import com.example.dto.cardInfo.UpdateCardInfoDto;
 import com.example.userServiceTask.service.cardInfo.CardInfoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

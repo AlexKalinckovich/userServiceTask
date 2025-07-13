@@ -1,8 +1,8 @@
 package com.example.userServiceTask.service.cardInfo;
 
-import com.example.userServiceTask.dto.cardInfo.CardInfoResponseDto;
-import com.example.userServiceTask.dto.cardInfo.CreateCardInfoDto;
-import com.example.userServiceTask.dto.cardInfo.UpdateCardInfoDto;
+import com.example.dto.cardInfo.CardInfoResponseDto;
+import com.example.dto.cardInfo.CreateCardInfoDto;
+import com.example.dto.cardInfo.UpdateCardInfoDto;
 import com.example.userServiceTask.mappers.cardInfo.CardInfoMapper;
 import com.example.userServiceTask.model.CardInfo;
 import com.example.userServiceTask.model.user.User;
