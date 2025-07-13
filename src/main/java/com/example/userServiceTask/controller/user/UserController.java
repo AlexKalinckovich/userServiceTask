@@ -1,8 +1,8 @@
 package com.example.userServiceTask.controller.user;
 
-import com.example.dto.user.CreateUserDto;
-import com.example.dto.user.UserResponseDto;
-import com.example.dto.user.UserUpdateDto;
+import com.example.userServiceTask.dto.user.CreateUserDto;
+import com.example.userServiceTask.dto.user.UserResponseDto;
+import com.example.userServiceTask.dto.user.UserUpdateDto;
 import com.example.userServiceTask.service.user.UserService;
 import jakarta.validation.Valid;
 
