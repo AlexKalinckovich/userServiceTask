@@ -49,7 +49,7 @@ jobs:
 
       - name: Build common-user-dto
         run: |
-          cd C:\\Users\\brota\\IdeaProjects\\common-user-dto
+          cd C:/Users/brota/IdeaProjects/common-user-dto
           mvn install -DskipTests
 
       - name: Build with Maven
