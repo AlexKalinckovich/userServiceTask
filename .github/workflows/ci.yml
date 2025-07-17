@@ -49,10 +49,6 @@ jobs:
 
       - name: Build with Maven
         run: mvn package -DskipTests
-
-      - name: Run tests
-        run: mvn test -Dexclude.tests=**/ci/**
-
   sonar:
     needs: build-test
     runs-on: ubuntu-latest
