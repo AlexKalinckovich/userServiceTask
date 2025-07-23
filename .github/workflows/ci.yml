@@ -7,67 +7,44 @@ on:
     branches: [ main ]
 
 env:
-  SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/userdb?createDatabaseIfNotExist=true
-  SPRING_DATASOURCE_USERNAME: root
-  SPRING_DATASOURCE_PASSWORD: wtpassword
-  SPRING_REDIS_HOST: localhost
-  SPRING_REDIS_PORT: 6379
+  SPRING_DATASOURCE_URL: ${{ env.SPRING_DATASOURCE_URL }}
+  SPRING_DATASOURCE_USERNAME: ${{ env.SPRING_DATASOURCE_USERNAME }}
+  SPRING_DATASOURCE_PASSWORD: ${{ env.SPRING_DATASOURCE_PASSWORD }}
+  SPRING_REDIS_HOST: ${{ env.SPRING_REDIS_HOST }}
+  SPRING_REDIS_PORT: ${{ env.SPRING_REDIS_PORT }}
 
 jobs:
-  build-test:
+  build:
+    name: Build and analyze
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: wtpassword
-          MYSQL_DATABASE: userdb
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
-
+          java-version: 17
+          distribution: 'zulu' # Alternative distribution options are available.
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-
-      - name: Build with Maven
-        run: mvn package -DskipTests
-  sonar:
-    needs: build-test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-      - name: SonarQube Scan
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=AlexKalinckovich_userServiceTask
 
-
   docker:
-    needs: build-test
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

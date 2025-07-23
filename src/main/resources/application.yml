@@ -6,10 +6,10 @@ spring:
 
   datasource:
     name: userDataSource
-    url: jdbc:mysql://localhost:3306/userdb?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    url: ${SPRING_DATASOURCE_URL}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: wtpassword
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
 
   jpa:
     defer-datasource-initialization: true
