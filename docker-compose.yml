@@ -7,9 +7,9 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      mysql-db:
+      user-db-local:
         condition: service_healthy
-      redis-cache:
+      redis-cache-local:
         condition: service_started
     environment:
       - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
@@ -18,7 +18,7 @@ services:
       - SPRING_REDIS_HOST=${SPRING_REDIS_HOST}
       - SPRING_REDIS_PORT=${SPRING_DATASOURCE_PORT}
 
-  user-db:
+  user-db-local:
     image: mysql:8.0
     container_name: user-db
     command: --default-authentication-plugin=mysql_native_password
@@ -35,9 +35,9 @@ services:
       timeout: 10s
       retries: 10
 
-  redis-cache:
+  redis-cache-local:
     image: redis:7-alpine
-    container_name: redis-cache
+    container_name: redis-cache-local
     ports:
       - "6379:6379"
     volumes:
