@@ -1,7 +1,6 @@
 package com.example.userServiceTask.utils;
 
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -23,6 +22,7 @@ public abstract class AbstractContainerBaseTest {
     protected static final String INITIAL_SCHEMA = RESOURCE_PATH + "/v1-initial-schema.xml";
 
     @Container
+    @ServiceConnection
     protected static final MySQLContainer<?> mysql = new MySQLContainer<>(DockerImageName.parse(MYSQL_IMAGE))
             .withDatabaseName(MYSQL_DATABASE_NAME)
             .withUsername(MYSQL_USERNAME)
@@ -35,18 +35,9 @@ public abstract class AbstractContainerBaseTest {
             );
 
     @Container
+    @ServiceConnection
     protected static final GenericContainer<?> redis = new GenericContainer<>(DockerImageName.parse(REDIS_IMAGE))
             .withExposedPorts(REDIS_PORT)
             .withReuse(true);
 
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", mysql::getJdbcUrl);
-        registry.add("spring.datasource.username", mysql::getUsername);
-        registry.add("spring.datasource.password", mysql::getPassword);
-        registry.add("spring.datasource.driver-class-name", () -> "com.mysql.cj.jdbc.Driver");
-
-        registry.add("spring.data.redis.host", redis::getHost);
-        registry.add("spring.data.redis.port", () -> redis.getMappedPort(REDIS_PORT));
-    }
 }
