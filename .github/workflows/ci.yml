@@ -14,6 +14,7 @@ env:
   SPRING_REDIS_HOST: ${{ secrets.SPRING_REDIS_HOST }}
   SPRING_REDIS_PORT: ${{ secrets.SPRING_REDIS_PORT }}
 
+
 jobs:
   build:
     name: Build and analyze
