@@ -1,6 +1,6 @@
 package com.example.userServiceTask.model.user;
 
-import com.example.userServiceTask.model.CardInfo;
+import com.example.userServiceTask.model.cardInfo.CardInfo;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.Email;
@@ -47,5 +47,6 @@ public class User {
     private String email;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<CardInfo> cards = new ArrayList<>();
 }

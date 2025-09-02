@@ -2,12 +2,12 @@ package com.example.userServiceTask.cardInfo.CardInfoControllerTests;
 
 import com.example.userServiceTask.config.MessageConfig;
 import com.example.userServiceTask.controller.cardInfo.CardInfoController;
+import com.example.userServiceTask.dto.cardInfo.CardInfoCreateDto;
 import com.example.userServiceTask.dto.cardInfo.CardInfoResponseDto;
-import com.example.userServiceTask.dto.cardInfo.CreateCardInfoDto;
-import com.example.userServiceTask.dto.cardInfo.UpdateCardInfoDto;
-import com.example.userServiceTask.exception.ExceptionResponseService;
+import com.example.userServiceTask.dto.cardInfo.CardInfoUpdateDto;
+import com.example.userServiceTask.exception.response.ExceptionResponseService;
 import com.example.userServiceTask.messageConstants.ErrorMessage;
-import com.example.userServiceTask.service.cardInfo.CardInfoService;
+import com.example.userServiceTask.service.cardInfo.CardInfoServiceImpl;
 import com.example.userServiceTask.service.messages.MessageService;
 import com.example.userServiceTask.utils.AbstractContainerBaseTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,7 +47,7 @@ public class CardInfoControllerTests extends AbstractContainerBaseTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private CardInfoService cardInfoService;
+    private CardInfoServiceImpl cardInfoServiceImpl;
 
     private static final Long VALID_ID = 1L;
     private static final Long INVALID_ID = 999L;
@@ -56,20 +56,20 @@ public class CardInfoControllerTests extends AbstractContainerBaseTest {
             .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-    private CreateCardInfoDto createCardInfoDto;
-    private UpdateCardInfoDto updateCardInfoDto;
+    private CardInfoCreateDto cardInfoCreateDto;
+    private CardInfoUpdateDto cardInfoUpdateDto;
     private CardInfoResponseDto cardInfoResponseDto;
 
     @BeforeEach
     void setUp() {
-        createCardInfoDto = CreateCardInfoDto.builder()
+        cardInfoCreateDto = CardInfoCreateDto.builder()
                 .userId(VALID_ID)
                 .holder("Jane")
                 .number("7865748596748576")
                 .expirationDate(LocalDate.MAX)
                 .build();
 
-        updateCardInfoDto = UpdateCardInfoDto.builder()
+        cardInfoUpdateDto = CardInfoUpdateDto.builder()
                 .id(VALID_ID)
                 .holder("Updated Holder")
                 .number("7865748596748576")
@@ -87,7 +87,7 @@ public class CardInfoControllerTests extends AbstractContainerBaseTest {
 
     @Test
     void createCardInfo_ValidRequest_ReturnsCreated() throws Exception {
-        when(cardInfoService.createCardInfo(any(CreateCardInfoDto.class)))
+        when(cardInfoServiceImpl.createCardInfo(any(CardInfoCreateDto.class)))
                 .thenReturn(CardInfoResponseDto.builder()
                         .id(VALID_ID)
                         .holder("Jane")
@@ -97,18 +97,18 @@ public class CardInfoControllerTests extends AbstractContainerBaseTest {
 
         mockMvc.perform(post("/cardInfo/create")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createCardInfoDto)))
+                        .content(objectMapper.writeValueAsString(cardInfoCreateDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(VALID_ID))
-                .andExpect(jsonPath("$.holder").value(createCardInfoDto.getHolder()))
-                .andExpect(jsonPath("$.number").value(createCardInfoDto.getNumber()));
+                .andExpect(jsonPath("$.holder").value(cardInfoCreateDto.getHolder()))
+                .andExpect(jsonPath("$.number").value(cardInfoCreateDto.getNumber()));
 
-        verify(cardInfoService, times(1)).createCardInfo(any());
+        verify(cardInfoServiceImpl, times(1)).createCardInfo(any());
     }
 
     @Test
     void getCardInfo_ExistingId_ReturnsOk() throws Exception {
-        when(cardInfoService.getCardInfoById(VALID_ID))
+        when(cardInfoServiceImpl.getCardInfoById(VALID_ID))
                 .thenReturn(cardInfoResponseDto);
 
         mockMvc.perform(get("/cardInfo/{id}", VALID_ID))
@@ -116,12 +116,12 @@ public class CardInfoControllerTests extends AbstractContainerBaseTest {
                 .andExpect(jsonPath("$.id").value(VALID_ID))
                 .andExpect(jsonPath("$.holder").value(cardInfoResponseDto.getHolder()));
 
-        verify(cardInfoService, times(1)).getCardInfoById(VALID_ID);
+        verify(cardInfoServiceImpl, times(1)).getCardInfoById(VALID_ID);
     }
 
     @Test
     void updateCardInfo_ValidRequest_ReturnsOk() throws Exception {
-        when(cardInfoService.updateCardInfo(any(UpdateCardInfoDto.class)))
+        when(cardInfoServiceImpl.updateCardInfo(any(CardInfoUpdateDto.class)))
                 .thenReturn(CardInfoResponseDto.builder()
                         .id(VALID_ID)
                         .holder("Updated Holder")
@@ -131,42 +131,42 @@ public class CardInfoControllerTests extends AbstractContainerBaseTest {
 
         mockMvc.perform(put("/cardInfo/update")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateCardInfoDto)))
+                        .content(objectMapper.writeValueAsString(cardInfoUpdateDto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.holder").value(updateCardInfoDto.getHolder()))
-                .andExpect(jsonPath("$.number").value(updateCardInfoDto.getNumber()));
+                .andExpect(jsonPath("$.holder").value(cardInfoUpdateDto.getHolder()))
+                .andExpect(jsonPath("$.number").value(cardInfoUpdateDto.getNumber()));
 
-        verify(cardInfoService, times(1)).updateCardInfo(any());
+        verify(cardInfoServiceImpl, times(1)).updateCardInfo(any());
     }
 
     @Test
     void deleteCardInfo_ExistingId_ReturnsOk() throws Exception {
-        when(cardInfoService.deleteCardInfoById(VALID_ID))
-                .thenReturn(1);
+        when(cardInfoServiceImpl.deleteCardInfoById(VALID_ID))
+                .thenReturn(cardInfoResponseDto);
 
         mockMvc.perform(delete("/cardInfo/{id}", VALID_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string("1"));
 
-        verify(cardInfoService, times(1)).deleteCardInfoById(VALID_ID);
+        verify(cardInfoServiceImpl, times(1)).deleteCardInfoById(VALID_ID);
     }
 
 
     @Test
     void getCardInfo_NotExistingId_ReturnsNotFound() throws Exception {
-        when(cardInfoService.getCardInfoById(INVALID_ID))
+        when(cardInfoServiceImpl.getCardInfoById(INVALID_ID))
                 .thenThrow(new EntityNotFoundException(ErrorMessage.RESOURCE_NOT_FOUND.getKey()));
 
         mockMvc.perform(get("/cardInfo/{id}", INVALID_ID))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.details.Error").value(ErrorMessage.RESOURCE_NOT_FOUND.getKey()));
 
-        verify(cardInfoService, times(1)).getCardInfoById(INVALID_ID);
+        verify(cardInfoServiceImpl, times(1)).getCardInfoById(INVALID_ID);
     }
 
     @Test
     void createCardInfo_InvalidRequest_ReturnsBadRequest() throws Exception {
-        final CreateCardInfoDto invalidDto = CreateCardInfoDto.builder().build();
+        final CardInfoCreateDto invalidDto = CardInfoCreateDto.builder().build();
 
         mockMvc.perform(post("/cardInfo/create")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -176,15 +176,15 @@ public class CardInfoControllerTests extends AbstractContainerBaseTest {
                 .andExpect(jsonPath("$.details.number").value("Card number is required"))
                 .andExpect(jsonPath("$.details.userId").value("User ID is required"));
 
-        verify(cardInfoService, never()).createCardInfo(any());
+        verify(cardInfoServiceImpl, never()).createCardInfo(any());
     }
 
     @Test
     void updateCardInfo_NotExistingId_ReturnsNotFound() throws Exception {
-        final UpdateCardInfoDto invalidDto = UpdateCardInfoDto.builder()
+        final CardInfoUpdateDto invalidDto = CardInfoUpdateDto.builder()
                         .id(INVALID_ID).expirationDate(LocalDate.MAX).build();
 
-        when(cardInfoService.updateCardInfo(any()))
+        when(cardInfoServiceImpl.updateCardInfo(any()))
                 .thenThrow(new EntityNotFoundException(ErrorMessage.RESOURCE_NOT_FOUND.getKey()));
 
         mockMvc.perform(put("/cardInfo/update")
@@ -193,12 +193,12 @@ public class CardInfoControllerTests extends AbstractContainerBaseTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.details.Error").value(ErrorMessage.RESOURCE_NOT_FOUND.getKey()));
 
-        verify(cardInfoService, times(1)).updateCardInfo(any());
+        verify(cardInfoServiceImpl, times(1)).updateCardInfo(any());
     }
 
     @Test
     void createCardInfo_InvalidExpirationDate_ReturnsBadRequest() throws Exception {
-        final CreateCardInfoDto expiredCard = CreateCardInfoDto.builder()
+        final CardInfoCreateDto expiredCard = CardInfoCreateDto.builder()
                 .userId(VALID_ID)
                 .number("random")
                 .holder("random")
@@ -211,12 +211,12 @@ public class CardInfoControllerTests extends AbstractContainerBaseTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.details.expirationDate").value("Must be future date"));
 
-        verify(cardInfoService, never()).createCardInfo(any());
+        verify(cardInfoServiceImpl, never()).createCardInfo(any());
     }
 
     @Test
     void updateCardInfo_MissingId_ReturnsBadRequest() throws Exception {
-        final UpdateCardInfoDto noIdDto = UpdateCardInfoDto.builder().id(null).build();
+        final CardInfoUpdateDto noIdDto = CardInfoUpdateDto.builder().id(null).build();
 
         mockMvc.perform(put("/cardInfo/update")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -224,6 +224,6 @@ public class CardInfoControllerTests extends AbstractContainerBaseTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.details.id").value("Card ID is required"));
 
-        verify(cardInfoService, never()).updateCardInfo(any());
+        verify(cardInfoServiceImpl, never()).updateCardInfo(any());
     }
 }

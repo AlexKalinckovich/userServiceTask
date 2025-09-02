@@ -1,13 +1,14 @@
 package com.example.userServiceTask.controller.user;
 
-import com.example.userServiceTask.dto.user.CreateUserDto;
+import com.example.userServiceTask.dto.user.UserCreateDto;
 import com.example.userServiceTask.dto.user.UserResponseDto;
 import com.example.userServiceTask.dto.user.UserUpdateDto;
 import com.example.userServiceTask.service.user.UserService;
 import jakarta.validation.Valid;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,18 +23,16 @@ import java.net.URI;
 
 @RestController
 @RequestMapping("/user")
+@Validated
+@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
 
-    @Autowired
-    public UserController(final UserService userService) {
-        this.userService = userService;
-    }
 
     @PostMapping("/create")
-    public ResponseEntity<UserResponseDto> createUser(@RequestBody @Valid CreateUserDto createUserDto) {
-        final UserResponseDto createdUser = userService.createUser(createUserDto);
+    public ResponseEntity<UserResponseDto> createUser(@RequestBody @Valid UserCreateDto userCreateDto) {
+        final UserResponseDto createdUser = userService.createUser(userCreateDto);
 
         final URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -55,8 +54,13 @@ public class UserController {
         return ResponseEntity.ok(userService.findUserById(id));
     }
 
+    @GetMapping("/email/{email}")
+    public ResponseEntity<UserResponseDto> getUserByEmail(@PathVariable String email) {
+        return ResponseEntity.ok(userService.findUserByEmail(email));
+    }
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<Integer> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<UserResponseDto> deleteUser(@PathVariable Long id) {
         return ResponseEntity.ok(userService.deleteUser(id));
     }
 }
