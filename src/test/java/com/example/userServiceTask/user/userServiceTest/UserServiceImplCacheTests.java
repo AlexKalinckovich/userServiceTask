@@ -1,12 +1,12 @@
 package com.example.userServiceTask.user.userServiceTest;
 
-import com.example.userServiceTask.dto.user.CreateUserDto;
+import com.example.userServiceTask.dto.user.UserCreateDto;
 import com.example.userServiceTask.dto.user.UserResponseDto;
 import com.example.userServiceTask.dto.user.UserUpdateDto;
 import com.example.userServiceTask.exception.user.EmailAlreadyExistsException;
 import com.example.userServiceTask.model.user.User;
 import com.example.userServiceTask.repositories.user.UserRepository;
-import com.example.userServiceTask.service.user.UserService;
+import com.example.userServiceTask.service.user.UserServiceImpl;
 import com.example.userServiceTask.utils.AbstractContainerBaseTest;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,10 +33,10 @@ import static org.mockito.Mockito.verify;
 
 @SpringBootTest
 @EnableCaching
-public class UserServiceCacheTests extends AbstractContainerBaseTest {
+public class UserServiceImplCacheTests extends AbstractContainerBaseTest {
 
     @Autowired
-    private UserService userService;
+    private UserServiceImpl userService;
 
     @Autowired
     private CacheManager cacheManager;
@@ -44,7 +44,7 @@ public class UserServiceCacheTests extends AbstractContainerBaseTest {
     @MockitoSpyBean
     private UserRepository userRepositorySpy;
 
-    private CreateUserDto user;
+    private UserCreateDto user;
 
     @BeforeEach
     void setUp() {
@@ -55,7 +55,7 @@ public class UserServiceCacheTests extends AbstractContainerBaseTest {
             cache.clear();
         }
 
-        user = CreateUserDto.builder()
+        user = UserCreateDto.builder()
                 .name("John")
                 .surname("Doe")
                 .birthDate(LocalDate.of(1990, 1, 1))
@@ -77,7 +77,7 @@ public class UserServiceCacheTests extends AbstractContainerBaseTest {
     void createUser_duplicateEmail_throwsException() {
         userService.createUser(user);
 
-        final CreateUserDto user2 = CreateUserDto.builder()
+        final UserCreateDto user2 = UserCreateDto.builder()
                 .name("John")
                 .surname("Doe")
                 .birthDate(LocalDate.of(1990, 1, 1))
@@ -157,7 +157,7 @@ public class UserServiceCacheTests extends AbstractContainerBaseTest {
 
     @Test
     void whenFindUserById_thenCached() {
-        final CreateUserDto user = CreateUserDto.builder()
+        final UserCreateDto user = UserCreateDto.builder()
                 .name("John")
                 .surname("Doe")
                 .birthDate(LocalDate.of(1990, 1, 1))
