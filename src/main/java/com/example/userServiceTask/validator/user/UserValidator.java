@@ -8,7 +8,6 @@ import com.example.userServiceTask.mappers.user.UserMapper;
 import com.example.userServiceTask.model.user.User;
 import com.example.userServiceTask.repositories.user.UserRepository;
 import com.example.userServiceTask.validator.Validator;
-import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
@@ -24,7 +23,7 @@ public class UserValidator implements Validator<UserCreateDto, UserUpdateDto, Us
     public User validateCreateDto(final @NotNull UserCreateDto createDto) {
         final String email = createDto.getEmail();
         if(userRepository.existsByEmail(email)){
-            throw new ValidationException("Email already exists");
+            throw new EmailAlreadyExistsException("Email already exists");
         }
         return userMapper.createFromDto(createDto);
     }

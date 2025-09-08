@@ -4,11 +4,11 @@ import com.example.userServiceTask.dto.user.UserCreateDto;
 import com.example.userServiceTask.dto.user.UserResponseDto;
 import com.example.userServiceTask.dto.user.UserUpdateDto;
 import com.example.userServiceTask.exception.user.EmailAlreadyExistsException;
+import com.example.userServiceTask.exception.user.UserNotFoundException;
 import com.example.userServiceTask.model.user.User;
 import com.example.userServiceTask.repositories.user.UserRepository;
-import com.example.userServiceTask.service.user.UserServiceImpl;
+import com.example.userServiceTask.service.user.UserService;
 import com.example.userServiceTask.utils.AbstractContainerBaseTest;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +35,9 @@ import static org.mockito.Mockito.verify;
 @EnableCaching
 public class UserServiceImplCacheTests extends AbstractContainerBaseTest {
 
+    private static final String USER_GMAIL = "johnDoe@gmail.com";
     @Autowired
-    private UserServiceImpl userService;
+    private UserService userService;
 
     @Autowired
     private CacheManager cacheManager;
@@ -59,7 +60,7 @@ public class UserServiceImplCacheTests extends AbstractContainerBaseTest {
                 .name("John")
                 .surname("Doe")
                 .birthDate(LocalDate.of(1990, 1, 1))
-                .email("john.doe@example.com")
+                .email(USER_GMAIL)
                 .build();
     }
 
@@ -76,16 +77,7 @@ public class UserServiceImplCacheTests extends AbstractContainerBaseTest {
     @Test
     void createUser_duplicateEmail_throwsException() {
         userService.createUser(user);
-
-        final UserCreateDto user2 = UserCreateDto.builder()
-                .name("John")
-                .surname("Doe")
-                .birthDate(LocalDate.of(1990, 1, 1))
-                .email("john.doe@example.com")
-                .build();
-
-        assertThrows(EmailAlreadyExistsException.class,
-                () -> userService.createUser(user2));
+        assertThrows(EmailAlreadyExistsException.class, () -> userService.createUser(user));
     }
 
     @Test
@@ -103,7 +95,7 @@ public class UserServiceImplCacheTests extends AbstractContainerBaseTest {
                 .id(dto.getId())
                 .name("Updated")
                 .surname("Bigger")
-                .birthDate(LocalDate.of(1991, 2, 2)) // Обновляем дату рождения
+                .birthDate(LocalDate.of(1991, 2, 2))
                 .build();
 
         userService.updateUser(updateDto);
@@ -113,7 +105,7 @@ public class UserServiceImplCacheTests extends AbstractContainerBaseTest {
         assertEquals("Bigger", updated.getSurname());
         assertEquals(LocalDate.of(1991, 2, 2), updated.getBirthDate());
 
-        assertEquals("john.doe@example.com", updated.getEmail());
+        assertEquals(USER_GMAIL, updated.getEmail());
     }
 
     @Test
@@ -126,7 +118,7 @@ public class UserServiceImplCacheTests extends AbstractContainerBaseTest {
                 .email("john.doe@example.com")
                 .build();
 
-        assertThrows(EntityNotFoundException.class,
+        assertThrows(UserNotFoundException.class,
                 () -> userService.updateUser(updateDto));
     }
 
@@ -142,7 +134,7 @@ public class UserServiceImplCacheTests extends AbstractContainerBaseTest {
 
     @Test
     void findUserById_notFound_throwsException() {
-        assertThrows(EntityNotFoundException.class,
+        assertThrows(UserNotFoundException.class,
                 () -> userService.findUserById(999L));
     }
 

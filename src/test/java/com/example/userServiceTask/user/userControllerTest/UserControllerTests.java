@@ -38,13 +38,7 @@ public class UserControllerTests extends AbstractContainerBaseTest {
     private final static Long INVALID_ID = 999L;
 
     @Autowired
-    private final MessageService messageService;
-    
-
-    @Autowired
-    public UserControllerTests(final MessageService messageService) {
-        this.messageService = messageService;
-    }
+    private MessageService messageService;
 
     @Autowired
     private MockMvc mockMvc;
@@ -71,7 +65,6 @@ public class UserControllerTests extends AbstractContainerBaseTest {
             .birthDate(LocalDate.of(1990, 1, 1))
             .cards(Collections.emptyList())
             .build();
-
 
 
     @Test
@@ -102,8 +95,8 @@ public class UserControllerTests extends AbstractContainerBaseTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidDto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value(messageService.getMessage(ErrorMessage.VALIDATION_ERROR)))
-                .andExpect(jsonPath("$.details.email").value("must not be blank"));
+                .andExpect(jsonPath("$.errorCode").value(ErrorMessage.VALIDATION_ERROR.name()))
+                .andExpect(jsonPath("$.details.fieldErrors.email").value("must not be blank"));
     }
 
     @Test
@@ -125,7 +118,7 @@ public class UserControllerTests extends AbstractContainerBaseTest {
 
         mockMvc.perform(get("/user/999"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value(messageService.getMessage(ErrorMessage.RESOURCE_NOT_FOUND)));
+                .andExpect(jsonPath("$.details.message").value(messageService.getMessage(ErrorMessage.RESOURCE_NOT_FOUND)));
     }
 
     @Test
@@ -163,16 +156,7 @@ public class UserControllerTests extends AbstractContainerBaseTest {
 
         mockMvc.perform(delete("/user/1"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("1"));
+                .andExpect(jsonPath("$.id").value(1));
     }
 
-    @Test
-    void deleteUser_NonExistingId_ReturnsZero() throws Exception {
-        when(userService.deleteUser(999L))
-                .thenReturn(sampleResponse);
-
-        mockMvc.perform(delete("/user/999"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("0"));
-    }
 }

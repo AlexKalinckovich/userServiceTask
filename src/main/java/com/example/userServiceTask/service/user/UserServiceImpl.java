@@ -51,7 +51,7 @@ public class UserServiceImpl implements UserService  {
     @Transactional
     @CacheEvict(value = USER_CACHE, key = "#id")
     public UserResponseDto deleteUser(final Long id) {
-        final User user =userValidator.checkUserForExistenceById(id);
+        final User user = userValidator.checkUserForExistenceById(id);
         userRepository.deleteUserById(id);
         return userMapper.toResponseDto(user);
     }
@@ -62,4 +62,5 @@ public class UserServiceImpl implements UserService  {
         final User user = userValidator.checkUserForExistenceByEmail(email);
         return userMapper.toResponseDto(user);
     }
+
 }

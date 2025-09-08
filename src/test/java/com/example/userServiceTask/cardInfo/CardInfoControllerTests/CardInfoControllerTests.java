@@ -34,14 +34,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CardInfoController.class)
 @Import({MessageService.class, ExceptionResponseService.class, MessageConfig.class})
 public class CardInfoControllerTests extends AbstractContainerBaseTest {
-
 
     @Autowired
     private MockMvc mockMvc;
@@ -146,7 +144,7 @@ public class CardInfoControllerTests extends AbstractContainerBaseTest {
 
         mockMvc.perform(delete("/cardInfo/{id}", VALID_ID))
                 .andExpect(status().isOk())
-                .andExpect(content().string("1"));
+                .andExpect(jsonPath("$.id").value(1));
 
         verify(cardInfoServiceImpl, times(1)).deleteCardInfoById(VALID_ID);
     }
@@ -159,7 +157,7 @@ public class CardInfoControllerTests extends AbstractContainerBaseTest {
 
         mockMvc.perform(get("/cardInfo/{id}", INVALID_ID))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.details.Error").value(ErrorMessage.RESOURCE_NOT_FOUND.getKey()));
+                .andExpect(jsonPath("$.details.message").value(ErrorMessage.RESOURCE_NOT_FOUND.getKey()));
 
         verify(cardInfoServiceImpl, times(1)).getCardInfoById(INVALID_ID);
     }
@@ -172,9 +170,9 @@ public class CardInfoControllerTests extends AbstractContainerBaseTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidDto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.details.holder").value("Card holder is required"))
-                .andExpect(jsonPath("$.details.number").value("Card number is required"))
-                .andExpect(jsonPath("$.details.userId").value("User ID is required"));
+                .andExpect(jsonPath("$.details.fieldErrors.holder").value("Card holder is required"))
+                .andExpect(jsonPath("$.details.fieldErrors.number").value("Card number is required"))
+                .andExpect(jsonPath("$.details.fieldErrors.userId").value("User ID is required"));
 
         verify(cardInfoServiceImpl, never()).createCardInfo(any());
     }
@@ -191,7 +189,7 @@ public class CardInfoControllerTests extends AbstractContainerBaseTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidDto)))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.details.Error").value(ErrorMessage.RESOURCE_NOT_FOUND.getKey()));
+                .andExpect(jsonPath("$.details.message").value(ErrorMessage.RESOURCE_NOT_FOUND.getKey()));
 
         verify(cardInfoServiceImpl, times(1)).updateCardInfo(any());
     }
@@ -209,7 +207,7 @@ public class CardInfoControllerTests extends AbstractContainerBaseTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(expiredCard)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.details.expirationDate").value("Must be future date"));
+                .andExpect(jsonPath("$.details.fieldErrors.expirationDate").value("Must be future date"));
 
         verify(cardInfoServiceImpl, never()).createCardInfo(any());
     }
@@ -222,7 +220,7 @@ public class CardInfoControllerTests extends AbstractContainerBaseTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(noIdDto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.details.id").value("Card ID is required"));
+                .andExpect(jsonPath("$.details.fieldErrors.id").value("Card ID is required"));
 
         verify(cardInfoServiceImpl, never()).updateCardInfo(any());
     }

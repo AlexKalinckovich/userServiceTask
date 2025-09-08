@@ -1,5 +1,5 @@
 server:
-  port: ${SPRING_APPLICATION_PORT}
+  port: ${SPRING_APPLICATION_PORT:8080}
 spring:
   config:
     import: classpath:error-message.properties

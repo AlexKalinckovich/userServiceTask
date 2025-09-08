@@ -3,6 +3,7 @@ package com.example.userServiceTask.controller.user;
 import com.example.userServiceTask.dto.user.UserCreateDto;
 import com.example.userServiceTask.dto.user.UserResponseDto;
 import com.example.userServiceTask.dto.user.UserUpdateDto;
+import com.example.userServiceTask.exception.user.UserNotFoundException;
 import com.example.userServiceTask.service.user.UserService;
 import jakarta.validation.Valid;
 
@@ -57,6 +58,17 @@ public class UserController {
     @GetMapping("/email/{email}")
     public ResponseEntity<UserResponseDto> getUserByEmail(@PathVariable String email) {
         return ResponseEntity.ok(userService.findUserByEmail(email));
+    }
+
+    @GetMapping("/exists/{id}")
+    public ResponseEntity<Boolean> isUserExistsById(@PathVariable Long id) {
+        boolean isUserExists = true;
+        try{
+            userService.findUserById(id);
+        }catch (UserNotFoundException e){
+            isUserExists = false;
+        }
+        return ResponseEntity.ok(isUserExists);
     }
 
     @DeleteMapping("/{id}")

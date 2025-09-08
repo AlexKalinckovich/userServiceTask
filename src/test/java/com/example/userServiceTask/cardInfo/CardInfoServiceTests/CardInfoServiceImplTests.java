@@ -3,6 +3,7 @@ package com.example.userServiceTask.cardInfo.CardInfoServiceTests;
 import com.example.userServiceTask.dto.cardInfo.CardInfoResponseDto;
 import com.example.userServiceTask.dto.cardInfo.CardInfoCreateDto;
 import com.example.userServiceTask.dto.cardInfo.CardInfoUpdateDto;
+import com.example.userServiceTask.exception.cardInfo.CardNotFoundException;
 import com.example.userServiceTask.mappers.cardInfo.CardInfoMapper;
 import com.example.userServiceTask.model.cardInfo.CardInfo;
 import com.example.userServiceTask.model.user.User;
@@ -10,7 +11,6 @@ import com.example.userServiceTask.repositories.CardInfoRepository;
 import com.example.userServiceTask.repositories.user.UserRepository;
 import com.example.userServiceTask.service.cardInfo.CardInfoServiceImpl;
 import com.example.userServiceTask.utils.AbstractContainerBaseTest;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -83,21 +83,21 @@ public class CardInfoServiceImplTests extends AbstractContainerBaseTest {
 
         cardInfoCreateDto = CardInfoCreateDto.builder()
                 .userId(DEFAULT_ID)
-                .holder("Jane")
+                .holder("John")
                 .number("3dA34DC98EF45A24")
                 .expirationDate(LocalDate.MAX)
                 .build();
 
         cardInfoUpdateDto = CardInfoUpdateDto.builder()
                 .id(DEFAULT_ID)
-                .holder("Updated Holder")
+                .holder("John")
                 .number("UpdatedNumber123")
                 .expirationDate(LocalDate.now())
                 .build();
 
         cardInfo = CardInfo.builder()
                 .id(DEFAULT_ID)
-                .holder("Jane")
+                .holder("John")
                 .number("3dA34DC98EF45A24")
                 .expirationDate(LocalDate.MAX)
                 .user(user)
@@ -105,7 +105,7 @@ public class CardInfoServiceImplTests extends AbstractContainerBaseTest {
 
         cardInfoResponseDto = CardInfoResponseDto.builder()
                 .id(DEFAULT_ID)
-                .holder("Jane")
+                .holder("John")
                 .number("3dA34DC98EF45A24")
                 .expirationDate(LocalDate.MAX)
                 .build();
@@ -184,7 +184,7 @@ public class CardInfoServiceImplTests extends AbstractContainerBaseTest {
         final CardInfoResponseDto updated = cardInfoServiceImpl.updateCardInfo(cardInfoUpdateDto);
 
         assertNotNull(updated);
-        assertEquals("Updated Holder", updated.getHolder());
+        assertEquals("John", updated.getHolder());
         assertEquals("UpdatedNumber123", updated.getNumber());
         assertEquals(LocalDate.now(), updated.getExpirationDate());
 
@@ -203,7 +203,7 @@ public class CardInfoServiceImplTests extends AbstractContainerBaseTest {
                 .id(NOT_EXISTING_ID)
                 .build();
 
-        assertThrows(EntityNotFoundException.class,
+        assertThrows(CardNotFoundException.class,
                 () -> cardInfoServiceImpl.updateCardInfo(dto));
 
         verify(cardInfoRepository, never()).save(any());
@@ -242,7 +242,7 @@ public class CardInfoServiceImplTests extends AbstractContainerBaseTest {
 
         final CardInfoResponseDto cached = cache.get(DEFAULT_ID, CardInfoResponseDto.class);
         assertNotNull(cached);
-        assertEquals("Updated Holder", cached.getHolder());
+        assertEquals("John", cached.getHolder());
         assertEquals("UpdatedNumber123", cached.getNumber());
     }
 
@@ -259,8 +259,7 @@ public class CardInfoServiceImplTests extends AbstractContainerBaseTest {
 
     @Test
     void deleteCardInfoById_success() {
-        when(cardInfoRepository.existsById(DEFAULT_ID))
-                .thenReturn(true);
+        when(cardInfoRepository.findById(DEFAULT_ID)).thenReturn(Optional.of(cardInfo));
 
         when(cardInfoRepository.deleteCardInfoById(DEFAULT_ID))
                 .thenReturn(1);
@@ -268,7 +267,7 @@ public class CardInfoServiceImplTests extends AbstractContainerBaseTest {
         final CardInfoResponseDto result = cardInfoServiceImpl.deleteCardInfoById(DEFAULT_ID);
 
         assertEquals(cardInfoResponseDto, result);
-        verify(cardInfoRepository, times(1)).existsById(DEFAULT_ID);
+        verify(cardInfoRepository, times(1)).findById(DEFAULT_ID);
         verify(cardInfoRepository, times(1)).deleteCardInfoById(DEFAULT_ID);
     }
 
@@ -277,7 +276,7 @@ public class CardInfoServiceImplTests extends AbstractContainerBaseTest {
         when(cardInfoRepository.existsById(NOT_EXISTING_ID))
                 .thenReturn(false);
 
-        assertThrows(EntityNotFoundException.class,
+        assertThrows(CardNotFoundException.class,
                 () -> cardInfoServiceImpl.deleteCardInfoById(NOT_EXISTING_ID));
 
         verify(cardInfoRepository, never()).deleteCardInfoById(anyLong());
@@ -289,8 +288,7 @@ public class CardInfoServiceImplTests extends AbstractContainerBaseTest {
         assertNotNull(cache);
         cache.put(DEFAULT_ID, cardInfoMapper.toResponseDto(cardInfo));
 
-        when(cardInfoRepository.existsById(DEFAULT_ID))
-                .thenReturn(true);
+        when(cardInfoRepository.findById(DEFAULT_ID)).thenReturn(Optional.of(cardInfo));
         when(cardInfoRepository.deleteCardInfoById(DEFAULT_ID))
                 .thenReturn(1);
 

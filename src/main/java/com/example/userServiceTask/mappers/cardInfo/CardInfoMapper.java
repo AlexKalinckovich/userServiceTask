@@ -4,13 +4,11 @@ import com.example.userServiceTask.dto.cardInfo.CardInfoCreateDto;
 import com.example.userServiceTask.dto.cardInfo.CardInfoResponseDto;
 import com.example.userServiceTask.dto.cardInfo.CardInfoUpdateDto;
 import com.example.userServiceTask.model.cardInfo.CardInfo;
-import com.example.userServiceTask.model.user.User;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Mappings;
-import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.List;
@@ -29,6 +27,7 @@ public interface CardInfoMapper {
     @Mapping(target = "userId", source = "user.id")
     CardInfoResponseDto toResponseDto(CardInfo cardInfo);
 
+    @Mapping(target = "user", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateFromDto(CardInfoUpdateDto dto, @MappingTarget CardInfo entity);
 
