@@ -2,14 +2,14 @@ package com.example.userServiceTask.user.userControllerTest;
 
 import com.example.userServiceTask.config.MessageConfig;
 import com.example.userServiceTask.controller.user.UserController;
-import com.example.userServiceTask.dto.user.CreateUserDto;
+import com.example.userServiceTask.dto.user.UserCreateDto;
 import com.example.userServiceTask.dto.user.UserResponseDto;
 import com.example.userServiceTask.dto.user.UserUpdateDto;
-import com.example.userServiceTask.exception.ExceptionResponseService;
+import com.example.userServiceTask.exception.response.ExceptionResponseService;
 import com.example.userServiceTask.exception.GlobalExceptionHandler;
 import com.example.userServiceTask.messageConstants.ErrorMessage;
 import com.example.userServiceTask.service.messages.MessageService;
-import com.example.userServiceTask.service.user.UserService;
+import com.example.userServiceTask.service.user.UserServiceImpl;
 import com.example.userServiceTask.utils.AbstractContainerBaseTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -38,25 +38,19 @@ public class UserControllerTests extends AbstractContainerBaseTest {
     private final static Long INVALID_ID = 999L;
 
     @Autowired
-    private final MessageService messageService;
-    
-
-    @Autowired
-    public UserControllerTests(final MessageService messageService) {
-        this.messageService = messageService;
-    }
+    private MessageService messageService;
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
-    private UserService userService;
+    private UserServiceImpl userService;
 
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-    private final CreateUserDto validCreateDto = CreateUserDto.builder()
+    private final UserCreateDto validCreateDto = UserCreateDto.builder()
             .name("John")
             .surname("Doe")
             .email("john.doe@example.com")
@@ -73,10 +67,9 @@ public class UserControllerTests extends AbstractContainerBaseTest {
             .build();
 
 
-
     @Test
     void createUser_ValidInput_ReturnsCreated() throws Exception {
-        when(userService.createUser(any(CreateUserDto.class)))
+        when(userService.createUser(any(UserCreateDto.class)))
                 .thenReturn(sampleResponse);
 
         mockMvc.perform(post("/user/create")
@@ -92,7 +85,7 @@ public class UserControllerTests extends AbstractContainerBaseTest {
 
     @Test
     void createUser_InvalidInput_ReturnsBadRequest() throws Exception {
-        final CreateUserDto invalidDto = CreateUserDto.builder()
+        final UserCreateDto invalidDto = UserCreateDto.builder()
                 .name("John")
                 .surname("Doe")
                 .birthDate(LocalDate.of(1990, 1, 1))
@@ -102,8 +95,8 @@ public class UserControllerTests extends AbstractContainerBaseTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidDto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value(messageService.getMessage(ErrorMessage.VALIDATION_ERROR)))
-                .andExpect(jsonPath("$.details.email").value("must not be blank"));
+                .andExpect(jsonPath("$.errorCode").value(ErrorMessage.VALIDATION_ERROR.name()))
+                .andExpect(jsonPath("$.details.fieldErrors.email").value("must not be blank"));
     }
 
     @Test
@@ -125,7 +118,7 @@ public class UserControllerTests extends AbstractContainerBaseTest {
 
         mockMvc.perform(get("/user/999"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value(messageService.getMessage(ErrorMessage.RESOURCE_NOT_FOUND)));
+                .andExpect(jsonPath("$.details.message").value(messageService.getMessage(ErrorMessage.RESOURCE_NOT_FOUND)));
     }
 
     @Test
@@ -159,20 +152,11 @@ public class UserControllerTests extends AbstractContainerBaseTest {
     @Test
     void deleteUser_ExistingId_ReturnsSuccess() throws Exception {
         when(userService.deleteUser(USER_ID))
-                .thenReturn(1);
+                .thenReturn(sampleResponse);
 
         mockMvc.perform(delete("/user/1"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("1"));
+                .andExpect(jsonPath("$.id").value(1));
     }
 
-    @Test
-    void deleteUser_NonExistingId_ReturnsZero() throws Exception {
-        when(userService.deleteUser(999L))
-                .thenReturn(0);
-
-        mockMvc.perform(delete("/user/999"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("0"));
-    }
 }

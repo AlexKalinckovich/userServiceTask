@@ -1,37 +1,35 @@
 package com.example.userServiceTask.mappers.cardInfo;
 
+import com.example.userServiceTask.dto.cardInfo.CardInfoCreateDto;
 import com.example.userServiceTask.dto.cardInfo.CardInfoResponseDto;
-import com.example.userServiceTask.dto.cardInfo.CreateCardInfoDto;
-import com.example.userServiceTask.dto.cardInfo.UpdateCardInfoDto;
-import com.example.userServiceTask.model.CardInfo;
-import com.example.userServiceTask.model.user.User;
+import com.example.userServiceTask.dto.cardInfo.CardInfoUpdateDto;
+import com.example.userServiceTask.model.cardInfo.CardInfo;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Mappings;
-import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
+
+import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface CardInfoMapper {
 
+
     @Mappings({
             @Mapping(target = "id", ignore = true),
+            @Mapping(target = "user", ignore = true)
     })
-    CardInfo fromCreateDto(CreateCardInfoDto createCardInfoDto);
+    CardInfo fromCreateDto(CardInfoCreateDto cardInfoCreateDto);
 
 
-    @Mappings({
-            @Mapping(target = "userId",source = "user", qualifiedByName = "userToUserId")
-    })
+    @Mapping(target = "userId", source = "user.id")
     CardInfoResponseDto toResponseDto(CardInfo cardInfo);
 
+    @Mapping(target = "user", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateFromDto(UpdateCardInfoDto dto, @MappingTarget CardInfo entity);
+    void updateFromDto(CardInfoUpdateDto dto, @MappingTarget CardInfo entity);
 
-    @Named("userToUserId")
-    default Long userToUserId(final User user) {
-        return user == null ? null : user.getId();
-    }
+    List<CardInfoResponseDto> toResponseDtoList(List<CardInfo> cardInfos);
 }

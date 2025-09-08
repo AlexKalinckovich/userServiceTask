@@ -8,7 +8,7 @@ import java.time.LocalDate;
 
 @Data
 @Builder
-public class CreateUserDto {
+public class UserCreateDto {
 
     @Size(min = 2, max = 25)
     @NotNull

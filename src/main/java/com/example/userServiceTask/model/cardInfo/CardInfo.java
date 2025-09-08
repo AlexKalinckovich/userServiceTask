@@ -1,4 +1,4 @@
-package com.example.userServiceTask.model;
+package com.example.userServiceTask.model.cardInfo;
 
 
 import com.example.userServiceTask.model.user.User;
